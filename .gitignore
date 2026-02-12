@@ -1,0 +1,58 @@
+# ---------------------------------------------------------
+# Laravel & PHP
+# ---------------------------------------------------------
+/vendor
+/node_modules
+/public/build
+/public/hot
+/public/storage
+/storage/*.key
+/storage/oauth-*.key
+/storage/app/public
+/storage/framework/cache/data/*
+/storage/framework/sessions/*
+/storage/framework/testing/*
+/storage/framework/views/*
+/storage/logs/*
+
+# Mantenha o arquivo .gitignore dentro das pastas, mas ignore o resto
+!/storage/app/public/.gitignore
+!/storage/framework/cache/data/.gitignore
+!/storage/framework/sessions/.gitignore
+!/storage/framework/testing/.gitignore
+!/storage/framework/views/.gitignore
+!/storage/logs/.gitignore
+
+# ---------------------------------------------------------
+# Arquivos de Ambiente (MUITO IMPORTANTE - Segurança)
+# ---------------------------------------------------------
+.env
+.env.backup
+.env.production
+.phpunit.result.cache
+npm-debug.log
+yarn-error.log
+
+# ---------------------------------------------------------
+# IDEs e Editores (PHPStorm, VS Code, Sublime)
+# ---------------------------------------------------------
+.idea
+.vscode
+.fleet
+*.suo
+*.ntvs
+*.njsproj
+*.sln
+*.sw?
+
+# ---------------------------------------------------------
+# Sistema Operacional
+# ---------------------------------------------------------
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# ---------------------------------------------------------
+# Docker (Opcional - ignore apenas volumes locais ou overrides)
+# ---------------------------------------------------------
+docker-compose.override.yml
