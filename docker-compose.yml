@@ -1,0 +1,87 @@
+# ============================================================
+# FASE 1: Apenas Sistema Terceiro (Simulador)
+# FASE 2: Descomentar api-core, postgres e rabbitmq depois
+# ============================================================
+
+services:
+  sistema-terceiro:
+    build:
+      context: ./sistema-terceiro      # Pasta do Laravel
+      dockerfile: docker/Dockerfile            # Dockerfile está na raiz de sistema-terceiro
+    container_name: bombeiros-sistema-terceiro
+    ports:
+      - "8000:80"
+    volumes:
+      - ./sistema-terceiro:/var/www/html  # Mapear a pasta correta
+    environment:
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - CORE_API_URL=http://api-core:80
+      - CORE_API_KEY=bombeiros-api-key-2026
+    networks:
+      - bombeiros-network
+    restart: unless-stopped
+
+  # ============================================================
+  # API CORE + INFRAESTRUTURA - DESCOMENTAR DEPOIS
+  # ============================================================
+  
+  # api-core:
+  #   build:
+  #     context: ./api-core
+  #     dockerfile: Dockerfile
+  #   container_name: bombeiros-api-core
+  #   ports:
+  #     - "8011:80"
+  #   volumes:
+  #     - ./api-core:/var/www/html
+  #   environment:
+  #     - APP_ENV=local
+  #     - APP_DEBUG=true
+  #     - DB_HOST=postgres
+  #     - DB_DATABASE=bombeiros_db
+  #     - DB_USERNAME=bombeiros_user
+  #     - DB_PASSWORD=bombeiros_pass
+  #     - RABBITMQ_HOST=rabbitmq
+  #     - QUEUE_CONNECTION=rabbitmq
+  #   networks:
+  #     - bombeiros-network
+  #   depends_on:
+  #     - postgres
+  #     - rabbitmq
+  
+  # postgres:
+  #   image: postgres:16-alpine
+  #   container_name: bombeiros-postgres
+  #   ports:
+  #     - "5432:5432"
+  #   environment:
+  #     - POSTGRES_DB=bombeiros_db
+  #     - POSTGRES_USER=bombeiros_user
+  #     - POSTGRES_PASSWORD=bombeiros_pass
+  #   volumes:
+  #     - postgres-data:/var/lib/postgresql/data
+  #   networks:
+  #     - bombeiros-network
+  
+  # rabbitmq:
+  #   image: rabbitmq:3.13-management-alpine
+  #   container_name: bombeiros-rabbitmq
+  #   ports:
+  #     - "5672:5672"
+  #     - "15672:15672"
+  #   environment:
+  #     - RABBITMQ_DEFAULT_USER=bombeiros
+  #     - RABBITMQ_DEFAULT_PASS=bombeiros123
+  #   volumes:
+  #     - rabbitmq-data:/var/lib/rabbitmq
+  #   networks:
+  #     - bombeiros-network
+
+networks:
+  bombeiros-network:
+    driver: bridge
+
+# volumes:
+#   postgres-data:
+#   rabbitmq-data:
