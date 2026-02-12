@@ -6,23 +6,13 @@ use DateTimeImmutable;
 
 final class ScenarioResult
 {
-    private bool $success;
-    private string $message;
-    private int $statusCode;
-    private DateTimeImmutable $sentAt;
-    private array $responses;
-
     public function __construct(
-        bool $success,
-        string $message,
-        int $statusCode,
-        array $responses = []
+        private readonly bool $success,
+        private readonly string $message,
+        private readonly int $statusCode,
+        private readonly array $responses = [],
+        private readonly DateTimeImmutable $sentAt = new DateTimeImmutable()
     ) {
-        $this->success = $success;
-        $this->message = $message;
-        $this->statusCode = $statusCode;
-        $this->sentAt = new DateTimeImmutable();
-        $this->responses = $responses;
     }
 
     public static function success(string $message, int $statusCode = 202, array $responses = []): self

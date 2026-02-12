@@ -3,20 +3,20 @@
 namespace Application\Scenarios;
 
 use Application\Factories\OccurrenceFactory;
-use Domain\Ports\CoreApiClientPort;
-use Domain\Ports\LoggerPort;
-use Domain\Ports\ScenarioPort;
+use Domain\Interfaces\CoreApiClientInterface;
+use Domain\Interfaces\LoggerInterface;
+use Domain\Interfaces\ScenarioInterface;
 use Domain\ValueObjects\IdempotencyKey;
 use Domain\ValueObjects\ScenarioResult;
 
-final class ConcurrencyScenario implements ScenarioPort
+final class ConcurrencyScenario implements ScenarioInterface
 {
     private const CONCURRENT_REQUESTS = 10;
 
     public function __construct(
         private readonly OccurrenceFactory $occurrenceFactory,
-        private readonly CoreApiClientPort $coreApiClient,
-        private readonly LoggerPort $logger
+        private readonly CoreApiClientInterface $coreApiClient,
+        private readonly LoggerInterface $logger
     ) {
     }
 
@@ -48,7 +48,7 @@ final class ConcurrencyScenario implements ScenarioPort
                     'success' => $response->isSuccess(),
                 ];
 
-                usleep(10000); // 0.01 segundo
+                usleep(10000);
             }
 
             $endTime = microtime(true);
@@ -82,8 +82,7 @@ final class ConcurrencyScenario implements ScenarioPort
             ]);
 
             return ScenarioResult::failure(
-                'Erro ao executar cenário: ' . $e->getMessage(),
-                500
+                'Erro ao executar cenário: ' . $e->getMessage()
             );
         }
     }

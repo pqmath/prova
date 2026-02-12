@@ -3,18 +3,18 @@
 namespace Application\Scenarios;
 
 use Application\Factories\OccurrenceFactory;
-use Domain\Ports\CoreApiClientPort;
-use Domain\Ports\LoggerPort;
-use Domain\Ports\ScenarioPort;
+use Domain\Interfaces\CoreApiClientInterface;
+use Domain\Interfaces\LoggerInterface;
+use Domain\Interfaces\ScenarioInterface;
 use Domain\ValueObjects\IdempotencyKey;
 use Domain\ValueObjects\ScenarioResult;
 
-final class IdempotencyScenario implements ScenarioPort
+final class IdempotencyScenario implements ScenarioInterface
 {
     public function __construct(
         private readonly OccurrenceFactory $occurrenceFactory,
-        private readonly CoreApiClientPort $coreApiClient,
-        private readonly LoggerPort $logger
+        private readonly CoreApiClientInterface $coreApiClient,
+        private readonly LoggerInterface $logger
     ) {
     }
 
@@ -28,7 +28,6 @@ final class IdempotencyScenario implements ScenarioPort
 
             $responses = [];
 
-            // PRIMEIRO ENVIO
             $this->logger->info('Enviando ocorrência (1ª vez)', [
                 'external_id' => $occurrence->getExternalId(),
                 'idempotency_key' => $idempotencyKey->getValue(),
@@ -41,9 +40,8 @@ final class IdempotencyScenario implements ScenarioPort
                 'body' => $response1->getBody(),
             ];
 
-            usleep(500000); // 0.5 segundo
+            usleep(500000);
 
-            // SEGUNDO ENVIO (MESMA OCORRÊNCIA, MESMA KEY)
             $this->logger->info('Enviando ocorrência (2ª vez - duplicata)', [
                 'external_id' => $occurrence->getExternalId(),
                 'idempotency_key' => $idempotencyKey->getValue(),
@@ -81,8 +79,7 @@ final class IdempotencyScenario implements ScenarioPort
             ]);
 
             return ScenarioResult::failure(
-                'Erro ao executar cenário: ' . $e->getMessage(),
-                500
+                'Erro ao executar cenário: ' . $e->getMessage()
             );
         }
     }

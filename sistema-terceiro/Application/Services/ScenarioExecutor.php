@@ -2,8 +2,8 @@
 
 namespace Application\Services;
 
-use Domain\Ports\LoggerPort;
-use Domain\Ports\ScenarioPort;
+use Domain\Interfaces\LoggerInterface;
+use Domain\Interfaces\ScenarioInterface;
 use Domain\ValueObjects\ScenarioResult;
 use InvalidArgumentException;
 
@@ -12,11 +12,11 @@ final class ScenarioExecutor
     private array $scenarios = [];
 
     public function __construct(
-        private readonly LoggerPort $logger
+        private readonly LoggerInterface $logger
     ) {
     }
 
-    public function registerScenario(ScenarioPort $scenario): void
+    public function registerScenario(ScenarioInterface $scenario): void
     {
         $this->scenarios[$scenario->getName()] = $scenario;
 

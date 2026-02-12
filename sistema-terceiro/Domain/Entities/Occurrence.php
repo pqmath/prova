@@ -9,20 +9,16 @@ use InvalidArgumentException;
 final class Occurrence
 {
     private string $externalId;
-    private OccurrenceType $type;
     private string $description;
-    private DateTimeImmutable $reportedAt;
 
     public function __construct(
         string $externalId,
-        OccurrenceType $type,
+        private readonly OccurrenceType $type,
         string $description,
-        DateTimeImmutable $reportedAt
+        private readonly DateTimeImmutable $reportedAt
     ) {
         $this->setExternalId($externalId);
-        $this->type = $type;
         $this->setDescription($description);
-        $this->reportedAt = $reportedAt;
     }
 
     private function setExternalId(string $externalId): void
@@ -75,7 +71,7 @@ final class Occurrence
     {
         return [
             'externalId' => $this->externalId,
-            'type' => $this->type->getValue(),
+            'type' => $this->type->value,
             'description' => $this->description,
             'reportedAt' => $this->reportedAt->format('c'),
         ];

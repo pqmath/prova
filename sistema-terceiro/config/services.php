@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'core_api' => [
+        'url' => env('CORE_API_URL', 'http://api-core:80'),
+        'key' => env('CORE_API_KEY', 'bombeiros-api-key-2026'),
+    ],
+
 ];

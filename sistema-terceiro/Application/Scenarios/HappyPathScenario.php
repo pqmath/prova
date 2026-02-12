@@ -3,18 +3,18 @@
 namespace Application\Scenarios;
 
 use Application\Factories\OccurrenceFactory;
-use Domain\Ports\CoreApiClientPort;
-use Domain\Ports\LoggerPort;
-use Domain\Ports\ScenarioPort;
+use Domain\Interfaces\CoreApiClientInterface;
+use Domain\Interfaces\LoggerInterface;
+use Domain\Interfaces\ScenarioInterface;
 use Domain\ValueObjects\IdempotencyKey;
 use Domain\ValueObjects\ScenarioResult;
 
-final class HappyPathScenario implements ScenarioPort
+final class HappyPathScenario implements ScenarioInterface
 {
     public function __construct(
         private readonly OccurrenceFactory $occurrenceFactory,
-        private readonly CoreApiClientPort $coreApiClient,
-        private readonly LoggerPort $logger
+        private readonly CoreApiClientInterface $coreApiClient,
+        private readonly LoggerInterface $logger
     ) {
     }
 
@@ -28,7 +28,7 @@ final class HappyPathScenario implements ScenarioPort
 
             $this->logger->info('Enviando ocorrência', [
                 'external_id' => $occurrence->getExternalId(),
-                'type' => $occurrence->getType()->getValue(),
+                'type' => $occurrence->getType()->value,
                 'idempotency_key' => $idempotencyKey->getValue(),
             ]);
 

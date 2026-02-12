@@ -1,18 +1,13 @@
-# ============================================================
-# FASE 1: Apenas Sistema Terceiro (Simulador)
-# FASE 2: Descomentar api-core, postgres e rabbitmq depois
-# ============================================================
-
 services:
   sistema-terceiro:
     build:
-      context: ./sistema-terceiro      # Pasta do Laravel
-      dockerfile: docker/Dockerfile            # Dockerfile está na raiz de sistema-terceiro
+      context: ./sistema-terceiro
+      dockerfile: docker/Dockerfile
     container_name: bombeiros-sistema-terceiro
     ports:
       - "8000:80"
     volumes:
-      - ./sistema-terceiro:/var/www/html  # Mapear a pasta correta
+      - ./sistema-terceiro:/var/www/html
     environment:
       - APP_ENV=local
       - APP_DEBUG=true
@@ -22,10 +17,6 @@ services:
       - bombeiros-network
     restart: unless-stopped
 
-  # ============================================================
-  # API CORE + INFRAESTRUTURA - DESCOMENTAR DEPOIS
-  # ============================================================
-  
   # api-core:
   #   build:
   #     context: ./api-core
@@ -49,7 +40,7 @@ services:
   #   depends_on:
   #     - postgres
   #     - rabbitmq
-  
+
   # postgres:
   #   image: postgres:16-alpine
   #   container_name: bombeiros-postgres
@@ -63,7 +54,7 @@ services:
   #     - postgres-data:/var/lib/postgresql/data
   #   networks:
   #     - bombeiros-network
-  
+
   # rabbitmq:
   #   image: rabbitmq:3.13-management-alpine
   #   container_name: bombeiros-rabbitmq

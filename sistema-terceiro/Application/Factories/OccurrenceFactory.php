@@ -41,7 +41,7 @@ final class OccurrenceFactory
         $description = $this->getRandomDescription($type);
 
         return new Occurrence(
-            'EXT-' . date('Y') . '-' . str_pad((string)rand(1, 999999), 6, '0', STR_PAD_LEFT),
+            'EXT-' . date('Y') . '-' . str_pad((string) rand(1, 999999), 6, '0', STR_PAD_LEFT),
             $type,
             $description,
             new DateTimeImmutable()
@@ -50,11 +50,11 @@ final class OccurrenceFactory
 
     public function createWithType(string $type): Occurrence
     {
-        $occurrenceType = new OccurrenceType($type);
+        $occurrenceType = OccurrenceType::from($type);
         $description = $this->getRandomDescription($occurrenceType);
 
         return new Occurrence(
-            'EXT-' . date('Y') . '-' . str_pad((string)rand(1, 999999), 6, '0', STR_PAD_LEFT),
+            'EXT-' . date('Y') . '-' . str_pad((string) rand(1, 999999), 6, '0', STR_PAD_LEFT),
             $occurrenceType,
             $description,
             new DateTimeImmutable()
@@ -69,7 +69,7 @@ final class OccurrenceFactory
     ): Occurrence {
         return new Occurrence(
             $externalId,
-            new OccurrenceType($type),
+            OccurrenceType::from($type),
             $description,
             $reportedAt ?? new DateTimeImmutable()
         );
@@ -77,8 +77,7 @@ final class OccurrenceFactory
 
     private function getRandomDescription(OccurrenceType $type): string
     {
-        $typeValue = $type->getValue();
-        $descriptions = self::DESCRIPTIONS[$typeValue] ?? ['Ocorrência simulada'];
+        $descriptions = self::DESCRIPTIONS[$type->value] ?? ['Ocorrência simulada'];
 
         return $descriptions[array_rand($descriptions)];
     }

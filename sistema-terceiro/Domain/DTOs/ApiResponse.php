@@ -1,18 +1,14 @@
 <?php
 
-namespace Infrastructure\DTOs;
+namespace Domain\DTOs;
 
 final class ApiResponse
 {
-    private int $statusCode;
-    private array $body;
-    private array $headers;
-
-    public function __construct(int $statusCode, array $body = [], array $headers = [])
-    {
-        $this->statusCode = $statusCode;
-        $this->body = $body;
-        $this->headers = $headers;
+    public function __construct(
+        private readonly int $statusCode,
+        private readonly array $body = [],
+        private readonly array $headers = []
+    ) {
     }
 
     public function getStatusCode(): int

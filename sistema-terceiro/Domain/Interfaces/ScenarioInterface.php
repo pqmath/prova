@@ -1,10 +1,10 @@
 <?php
 
-namespace Domain\Ports;
+namespace Domain\Interfaces;
 
 use Domain\ValueObjects\ScenarioResult;
 
-interface ScenarioPort
+interface ScenarioInterface
 {
     public function execute(): ScenarioResult;
     public function getName(): string;

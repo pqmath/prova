@@ -2,10 +2,10 @@
 
 namespace Infrastructure\Adapters;
 
-use Domain\Ports\LoggerPort;
+use Domain\Interfaces\LoggerInterface;
 use Illuminate\Support\Facades\Log;
 
-final class LaravelLogger implements LoggerPort
+final class LaravelLogger implements LoggerInterface
 {
     public function info(string $message, array $context = []): void
     {
