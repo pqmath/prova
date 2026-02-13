@@ -4,19 +4,22 @@ services:
       context: ./sistema-terceiro
       dockerfile: docker/Dockerfile
     container_name: bombeiros-sistema-terceiro
+
     ports:
       - "8000:80"
     volumes:
-      - ./sistema-terceiro:/var/www/html
+      - ./sistema-terceiro:/app
     environment:
       - APP_ENV=local
       - APP_DEBUG=true
       - CORE_API_URL=http://api-core:80
       - CORE_API_KEY=bombeiros-api-key-2026
+      - XDEBUG_MODE=coverage,debug
+      - WEB_DOCUMENT_ROOT=/app/public
+    working_dir: /app # Adicione isso
     networks:
       - bombeiros-network
     restart: unless-stopped
-
   # api-core:
   #   build:
   #     context: ./api-core
