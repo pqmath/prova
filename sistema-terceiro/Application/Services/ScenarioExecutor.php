@@ -7,7 +7,7 @@ use Domain\Interfaces\ScenarioInterface;
 use Domain\ValueObjects\ScenarioResult;
 use InvalidArgumentException;
 
-final class ScenarioExecutor
+class ScenarioExecutor
 {
     private array $scenarios = [];
 

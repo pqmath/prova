@@ -6,7 +6,7 @@ use Domain\Entities\Occurrence;
 use Domain\ValueObjects\OccurrenceType;
 use DateTimeImmutable;
 
-final class OccurrenceFactory
+class OccurrenceFactory
 {
     private const DESCRIPTIONS = [
         'incendio_urbano' => [

@@ -6,7 +6,7 @@ use Domain\ValueObjects\OccurrenceType;
 use DateTimeImmutable;
 use InvalidArgumentException;
 
-final class Occurrence
+class Occurrence
 {
     private string $externalId;
     private string $description;
