@@ -15,6 +15,8 @@ RUN apt-get update && apt-get install -y \
     libzip-dev \
     zip \
     unzip \
+    nodejs \
+    npm \
     && docker-php-ext-install zip \
     && rm -rf /var/lib/apt/lists/*
 
@@ -28,8 +30,12 @@ COPY . .
 
 RUN mkdir -p storage/framework/{sessions,views,cache} \
     && mkdir -p storage/logs \
+    && mkdir -p database \
+    && touch database/database.sqlite \
     && chown -R application:application /app \
-    && chmod -R 777 storage bootstrap/cache
+    && chmod -R 777 storage bootstrap/cache \
+    && chmod -R 775 database \
+    && chmod 664 database/database.sqlite
 
 USER application
 

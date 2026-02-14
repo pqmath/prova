@@ -70,8 +70,12 @@ final class ConcurrencyScenario implements ScenarioInterface
                 );
             }
 
+            $message = $successCount === 0
+                ? "Nenhuma ocorrência foi enviada com sucesso"
+                : "Apenas {$successCount} de " . self::CONCURRENT_REQUESTS . " foram enviadas com sucesso";
+
             return ScenarioResult::failure(
-                "Apenas {$successCount} de " . self::CONCURRENT_REQUESTS . " foram enviadas com sucesso",
+                $message,
                 500,
                 $responses
             );
