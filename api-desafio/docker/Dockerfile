@@ -25,6 +25,8 @@ WORKDIR /app
 
 COPY . .
 
+COPY docker/supervisord.conf /opt/docker/etc/supervisord.conf
+
 RUN composer install --no-dev --no-interaction --no-scripts --prefer-dist --optimize-autoloader
 
 RUN mkdir -p storage/framework/{sessions,views,cache} \
