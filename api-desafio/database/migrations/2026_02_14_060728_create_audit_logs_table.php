@@ -15,9 +15,9 @@ return new class extends Migration {
             $table->string('entity_type');
             $table->string('entity_id');
             $table->string('action');
-            $table->json('changes')->nullable();
+            $table->json('before')->nullable();
+            $table->json('after')->nullable();
             $table->json('meta')->nullable();
-            $table->string('user_id')->nullable();
             $table->timestamps();
         });
     }
