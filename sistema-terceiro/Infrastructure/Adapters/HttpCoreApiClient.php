@@ -15,7 +15,7 @@ final class HttpCoreApiClient implements CoreApiClientInterface
     private string $apiKey;
     private int $timeout;
 
-    public function __construct(?string $baseUrl = null, ?string $apiKey = null, int $timeout = 3)
+    public function __construct(?string $baseUrl = null, ?string $apiKey = null, int $timeout = 10)
     {
         $this->baseUrl = $baseUrl ?? config('services.core_api.url');
         $this->apiKey = $apiKey ?? config('services.core_api.key');
