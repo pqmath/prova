@@ -5,12 +5,11 @@ namespace Domain\ValueObjects;
 use InvalidArgumentException;
 use Illuminate\Support\Str;
 
-final class IdempotencyKey
+final readonly class IdempotencyKey
 {
-    private string $value;
-
-    public function __construct(string $value)
-    {
+    public function __construct(
+        public string $value
+    ) {
         if (empty(trim($value))) {
             throw new InvalidArgumentException('Idempotency key não pode ser vazia');
         }
@@ -18,8 +17,6 @@ final class IdempotencyKey
         if (strlen($value) > 255) {
             throw new InvalidArgumentException('Idempotency key não pode ter mais de 255 caracteres');
         }
-
-        $this->value = $value;
     }
 
     public function getValue(): string

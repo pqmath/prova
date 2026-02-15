@@ -27,7 +27,6 @@ class IdempotencyScenarioTest extends TestCase
         );
         $factory->method('createRandom')->willReturn($occurrence);
 
-        // Expects sendOccurrence to be called twice
         $apiClient->expects($this->exactly(2))
             ->method('sendOccurrence')
             ->willReturn(new ApiResponse(202, ['status' => 'queued']));
@@ -36,7 +35,10 @@ class IdempotencyScenarioTest extends TestCase
         $result = $scenario->execute();
 
         $this->assertTrue($result->isSuccess());
-        $this->assertEquals('Teste de idempotência executado. Backend deve detectar duplicata internamente.', $result->getMessage());
+        $this->assertEquals(
+            'Teste de idempotência executado. Backend deve detectar duplicata internamente.',
+            $result->getMessage()
+        );
     }
     public function test_has_name_and_description()
     {
@@ -62,7 +64,6 @@ class IdempotencyScenarioTest extends TestCase
         );
         $factory->method('createRandom')->willReturn($occurrence);
 
-        // One success, one failure
         $apiClient->method('sendOccurrence')->willReturnOnConsecutiveCalls(
             new ApiResponse(202, ['status' => 'queued']),
             new ApiResponse(500, ['error' => 'fail'])

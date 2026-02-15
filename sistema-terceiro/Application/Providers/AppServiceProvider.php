@@ -40,7 +40,6 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(ConcurrencyScenario::class, function ($app) {
             return new ConcurrencyScenario(
                 $app->make(OccurrenceFactory::class),
-                $app->make(CoreApiClientInterface::class),
                 $app->make(LoggerInterface::class)
             );
         });

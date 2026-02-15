@@ -69,4 +69,23 @@ class OccurrenceRepository implements OccurrenceRepositoryInterface
             $model->updated_at->format('Y-m-d H:i:s')
         );
     }
+
+    public function list(array $filters): array
+    {
+        $query = EloquentOccurrence::query();
+
+        if (isset($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+
+        if (isset($filters['type'])) {
+            $query->where('type', $filters['type']);
+        }
+
+        if (isset($filters['search'])) {
+            $query->where('description', 'ilike', '%' . $filters['search'] . '%');
+        }
+
+        return $query->orderBy('reported_at', 'desc')->paginate(15)->toArray();
+    }
 }

@@ -73,4 +73,25 @@ class ApiResponseTest extends TestCase
 
         $this->assertEquals($expected, $response->toArray());
     }
+
+    public function test_can_get_error_message()
+    {
+        $response1 = new ApiResponse(400, ['error' => 'Validation failed']);
+        $this->assertEquals('Validation failed', $response1->getErrorMessage());
+
+        $response2 = new ApiResponse(500, ['message' => 'Server error']);
+        $this->assertEquals('Server error', $response2->getErrorMessage());
+
+        $response3 = new ApiResponse(200, ['data' => 'ok']);
+        $this->assertNull($response3->getErrorMessage());
+    }
+
+    public function test_can_get_command_id()
+    {
+        $response1 = new ApiResponse(202, ['commandId' => 'cmd-123']);
+        $this->assertEquals('cmd-123', $response1->getCommandId());
+
+        $response2 = new ApiResponse(200, []);
+        $this->assertNull($response2->getCommandId());
+    }
 }

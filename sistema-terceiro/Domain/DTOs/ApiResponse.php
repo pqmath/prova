@@ -46,6 +46,16 @@ final class ApiResponse
         return $this->statusCode >= 500 && $this->statusCode < 600;
     }
 
+    public function getErrorMessage(): ?string
+    {
+        return $this->body['error'] ?? $this->body['message'] ?? null;
+    }
+
+    public function getCommandId(): ?string
+    {
+        return $this->body['commandId'] ?? null;
+    }
+
     public function toArray(): array
     {
         return [

@@ -3,8 +3,7 @@
 namespace Application\Http\Controllers;
 
 use Application\UseCases\ListOccurrencesUseCase;
-use Application\UseCases\StartOccurrenceUseCase;
-use Application\UseCases\ResolveOccurrenceUseCase;
+use Application\UseCases\RequestCommandUseCase;
 use Domain\Services\LoggerInterface;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -13,8 +12,7 @@ class OccurrenceController extends Controller
 {
     public function __construct(
         private readonly ListOccurrencesUseCase $listUseCase,
-        private readonly StartOccurrenceUseCase $startUseCase,
-        private readonly ResolveOccurrenceUseCase $resolveUseCase,
+        private readonly RequestCommandUseCase $requestCommand,
         private readonly LoggerInterface $logger
     ) {
     }
@@ -28,34 +26,60 @@ class OccurrenceController extends Controller
         return response()->json($occurrences);
     }
 
-    public function start(string $id): JsonResponse
+    public function start(Request $request, string $id): JsonResponse
     {
-        $this->logger->info("Iniciando atendimento da ocorrência {$id}");
+        $idempotencyKey = $request->header('Idempotency-Key');
+
+        if (!$idempotencyKey) {
+            $this->logger->warning('Rejeitada requisição de start sem Idempotency-Key');
+            return response()->json(['error' => 'Idempotency-Key header is required'], 400);
+        }
+
+        $this->logger->info("Solicitando início da ocorrência {$id}");
         try {
-            $occurrence = $this->startUseCase->execute($id);
-            $this->logger->info("Ocorrência {$id} iniciada com sucesso");
+            $commandId = $this->requestCommand->execute(
+                $idempotencyKey,
+                'operator_web',
+                'occurrence.started',
+                ['id' => $id]
+            );
+            $this->logger->info("Solicitação de início aceita", ['command_id' => $commandId]);
             return response()->json([
-                'message' => 'Occurrence started successfully',
-                'data' => $occurrence
-            ]);
+                'message' => 'Start request accepted',
+                'commandId' => $commandId,
+                'status' => 'accepted'
+            ], 202);
         } catch (\Exception $e) {
-            $this->logger->error("Erro ao iniciar ocorrência {$id}: " . $e->getMessage());
+            $this->logger->error("Erro ao solicitar início da ocorrência {$id}: " . $e->getMessage());
             return response()->json(['error' => $e->getMessage()], 400);
         }
     }
 
-    public function resolve(string $id): JsonResponse
+    public function resolve(Request $request, string $id): JsonResponse
     {
-        $this->logger->info("Resolvendo ocorrência {$id}");
+        $idempotencyKey = $request->header('Idempotency-Key');
+
+        if (!$idempotencyKey) {
+            $this->logger->warning('Rejeitada requisição de resolve sem Idempotency-Key');
+            return response()->json(['error' => 'Idempotency-Key header is required'], 400);
+        }
+
+        $this->logger->info("Solicitando resolução da ocorrência {$id}");
         try {
-            $occurrence = $this->resolveUseCase->execute($id);
-            $this->logger->info("Ocorrência {$id} resolvida com sucesso");
+            $commandId = $this->requestCommand->execute(
+                $idempotencyKey,
+                'operator_web',
+                'occurrence.resolved',
+                ['id' => $id]
+            );
+            $this->logger->info("Solicitação de resolução aceita", ['command_id' => $commandId]);
             return response()->json([
-                'message' => 'Occurrence resolved successfully',
-                'data' => $occurrence
-            ]);
+                'message' => 'Resolve request accepted',
+                'commandId' => $commandId,
+                'status' => 'accepted'
+            ], 202);
         } catch (\Exception $e) {
-            $this->logger->error("Erro ao resolver ocorrência {$id}: " . $e->getMessage());
+            $this->logger->error("Erro ao solicitar resolução da ocorrência {$id}: " . $e->getMessage());
             return response()->json(['error' => $e->getMessage()], 400);
         }
     }

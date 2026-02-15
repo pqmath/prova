@@ -8,7 +8,6 @@ use Domain\Interfaces\ScenarioInterface;
 use Domain\ValueObjects\ScenarioResult;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
-use RuntimeException;
 
 class ScenarioExecutorTest extends TestCase
 {
@@ -97,7 +96,7 @@ class ScenarioExecutorTest extends TestCase
     {
         $scenario = $this->createMock(ScenarioInterface::class);
         $scenario->method('getName')->willReturn('s1');
-        $scenario->method('getDescription')->willReturn('Desc'); // Ensure this string matches assertion
+        $scenario->method('getDescription')->willReturn('Desc');
 
         $this->executor->registerScenario($scenario);
         $list = $this->executor->listScenarios();

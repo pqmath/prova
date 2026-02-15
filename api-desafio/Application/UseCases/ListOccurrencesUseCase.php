@@ -2,25 +2,17 @@
 
 namespace Application\UseCases;
 
-use Application\Models\Occurrence;
+use Domain\Repositories\OccurrenceRepositoryInterface;
+
 class ListOccurrencesUseCase
 {
+    public function __construct(
+        private readonly OccurrenceRepositoryInterface $repository
+    ) {
+    }
+
     public function execute(array $filters): array
     {
-        $query = Occurrence::query();
-
-        if (isset($filters['status'])) {
-            $query->where('status', $filters['status']);
-        }
-
-        if (isset($filters['type'])) {
-            $query->where('type', $filters['type']);
-        }
-
-        if (isset($filters['search'])) {
-            $query->where('description', 'ilike', '%' . $filters['search'] . '%');
-        }
-
-        return $query->orderBy('reported_at', 'desc')->paginate(15)->toArray();
+        return $this->repository->list($filters);
     }
 }

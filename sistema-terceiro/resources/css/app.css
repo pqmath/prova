@@ -1,5 +1,4 @@
 :root {
-    /* Default Dark Mode */
     --bg-color: #212529;
     --text-color: #f8f9fa;
     --card-bg: #343a40;
@@ -9,7 +8,6 @@
     --console-bg: #000000;
     --console-text: #00ff00;
 
-    /* Scrollbar Variables */
     --scrollbar-track: transparent;
     --scrollbar-thumb: rgba(255, 255, 255, 0.3);
     --scrollbar-thumb-hover: rgba(255, 255, 255, 0.5);
@@ -27,12 +25,10 @@
     --console-bg: #212529;
     --console-text: #f8f9fa;
 
-    /* Scrollbar Variables for Light Mode */
     --scrollbar-thumb: rgba(0, 0, 0, 0.3);
     --scrollbar-thumb-hover: rgba(0, 0, 0, 0.5);
 }
 
-/* Custom Scrollbar */
 ::-webkit-scrollbar {
     width: 8px;
     height: 8px;

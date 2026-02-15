@@ -2,7 +2,8 @@
 
 namespace Application\Http\Controllers;
 
-use Application\UseCases\RequestOccurrenceCreationUseCase;
+
+use Application\UseCases\RequestCommandUseCase;
 use Domain\Services\LoggerInterface;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -10,7 +11,7 @@ use Illuminate\Http\JsonResponse;
 class IntegrationController extends Controller
 {
     public function __construct(
-        private readonly RequestOccurrenceCreationUseCase $useCase,
+        private readonly RequestCommandUseCase $requestCommand,
         private readonly LoggerInterface $logger
     ) {
     }
@@ -25,7 +26,9 @@ class IntegrationController extends Controller
         }
 
         $data = $request->all();
-        $this->logger->info("Recebida requisição de integração", ['idempotency_key' => $idempotencyKey, 'data' => $data]);
+        $this->logger->info(
+            "Recebida requisição de integração", ['idempotency_key' => $idempotencyKey, 'data' => $data]
+        );
 
         $payload = [
             'externalId' => $data['externalId'] ?? $data['external_id'] ?? null,
@@ -36,11 +39,13 @@ class IntegrationController extends Controller
 
         if (!$payload['externalId'] || !$payload['type'] || !$payload['description'] || !$payload['reportedAt']) {
             $this->logger->warning("Requisição de integração inválida (campos faltando)", ['payload' => $payload]);
-            return response()->json(['error' => 'Missing required fields (externalId, type, description, reportedAt)'], 422);
+            return response()->json(
+                ['error' => 'Missing required fields (externalId, type, description, reportedAt)'], 422
+            );
         }
 
         try {
-            $commandId = $this->useCase->execute(
+            $commandId = $this->requestCommand->execute(
                 $idempotencyKey,
                 'system_integration',
                 'occurrence.received',
@@ -54,7 +59,9 @@ class IntegrationController extends Controller
                 'status' => 'accepted'
             ], 202);
         } catch (\Exception $e) {
-            $this->logger->error("Erro ao processar requisição de integração: " . $e->getMessage(), ['exception' => $e]);
+            $this->logger->error(
+                "Erro ao processar requisição de integração: " . $e->getMessage(), ['exception' => $e]
+            );
             return response()->json(['error' => $e->getMessage()], 400);
         }
     }
