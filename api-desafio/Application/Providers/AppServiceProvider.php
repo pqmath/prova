@@ -16,6 +16,7 @@ use Infrastructure\Repositories\EventInboxRepository;
 use Infrastructure\Repositories\OccurrenceRepository;
 use Infrastructure\Services\RabbitMQ\RabbitMQClient;
 use Infrastructure\Services\RabbitMQ\RabbitMQPublisher;
+use Infrastructure\Console\Commands\SimulateDispatchMovement;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -69,6 +70,7 @@ class AppServiceProvider extends ServiceProvider
         $this->commands([
             PublishPendingEventsCommand::class,
             ProcessOccurrencesCommand::class,
+            SimulateDispatchMovement::class,
         ]);
     }
 }

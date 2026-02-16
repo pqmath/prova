@@ -16,7 +16,7 @@ class CreateDispatchUseCase
     ) {
     }
 
-    public function execute(string $occurrenceId, string $resourceCode): Dispatch
+    public function execute(string $occurrenceId, string $resourceCode, string $source = 'Sistema'): Dispatch
     {
         $occurrence = $this->occurrenceRepository->findById($occurrenceId);
 
@@ -31,6 +31,7 @@ class CreateDispatchUseCase
             'entity_type' => 'Dispatch',
             'entity_id' => $dispatch->id,
             'action' => 'created',
+            'source' => $source,
             'after' => (array) $dispatch,
             'meta' => ['occurrence_id' => $occurrenceId]
         ]);

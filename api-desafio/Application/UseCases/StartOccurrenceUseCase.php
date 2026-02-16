@@ -17,7 +17,7 @@ class StartOccurrenceUseCase
     ) {
     }
 
-    public function execute(string $id): Occurrence
+    public function execute(string $id, string $source = 'Sistema'): Occurrence
     {
         $occurrence = $this->repository->findById($id);
 
@@ -46,6 +46,7 @@ class StartOccurrenceUseCase
             'entity_type' => 'Occurrence',
             'entity_id' => $occurrence->id,
             'action' => 'started',
+            'source' => $source,
             'before' => (array) $occurrence,
             'after' => (array) $updatedOccurrence,
         ]);

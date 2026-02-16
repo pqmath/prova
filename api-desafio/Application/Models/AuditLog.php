@@ -12,6 +12,7 @@ class AuditLog extends Model
         'entity_type',
         'entity_id',
         'action',
+        'source',
         'before',
         'after',
         'meta',

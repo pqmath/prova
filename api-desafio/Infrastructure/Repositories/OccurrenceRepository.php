@@ -72,7 +72,7 @@ class OccurrenceRepository implements OccurrenceRepositoryInterface
 
     public function list(array $filters): array
     {
-        $query = EloquentOccurrence::query();
+        $query = EloquentOccurrence::with('dispatches');
 
         if (isset($filters['status'])) {
             $query->where('status', $filters['status']);

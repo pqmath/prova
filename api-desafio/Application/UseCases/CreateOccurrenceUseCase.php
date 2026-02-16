@@ -58,7 +58,8 @@ class CreateOccurrenceUseCase
         return [
             'occurrence' => $occurrence,
             'action' => $wasCreated ? 'created' : 'updated',
-            'before' => $wasCreated ? null : $existing
+            'before' => $wasCreated ? null : $existing,
+            'source' => 'Sistema Terceiro'
         ];
     }
 }

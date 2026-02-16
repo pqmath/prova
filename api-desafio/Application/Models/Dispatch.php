@@ -5,6 +5,7 @@ namespace Application\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Dispatch extends Model
 {
@@ -26,4 +27,9 @@ class Dispatch extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    public function occurrence(): BelongsTo
+    {
+        return $this->belongsTo(Occurrence::class);
+    }
 }
