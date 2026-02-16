@@ -4,20 +4,22 @@ namespace Infrastructure\Services\RabbitMQ;
 
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use PhpAmqpLib\Channel\AMQPChannel;
-use InvalidArgumentException;
 
 class RabbitMQClient
 {
     private ?AMQPStreamConnection $connection = null;
     private ?AMQPChannel $channel = null;
+    private AMQPConnectionFactory $connectionFactory;
 
     public function __construct(
         private readonly string $host,
         private readonly int $port,
         private readonly string $user,
         private readonly string $password,
-        private readonly string $vhost = '/'
+        private readonly string $vhost = '/',
+        ?AMQPConnectionFactory $connectionFactory = null
     ) {
+        $this->connectionFactory = $connectionFactory ?? new AMQPConnectionFactory();
     }
 
     public function getChannel(): AMQPChannel
@@ -31,13 +33,12 @@ class RabbitMQClient
         }
 
         $this->channel = $this->connection->channel();
-
         return $this->channel;
     }
 
     private function connect(): void
     {
-        $this->connection = new AMQPStreamConnection(
+        $this->connection = $this->connectionFactory->create(
             $this->host,
             $this->port,
             $this->user,

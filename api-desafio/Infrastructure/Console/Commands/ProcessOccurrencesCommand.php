@@ -97,7 +97,9 @@ class ProcessOccurrencesCommand extends Command
                         $this->processDispatch($payload);
                         break;
                     default:
-                        $this->logger->warning("Tipo de evento desconhecido: {$type}", ['event_inbox_id' => $eventInboxId]);
+                        $this->logger->warning(
+                            "Tipo de evento desconhecido: {$type}", ['event_inbox_id' => $eventInboxId]
+                        );
                         break;
                 }
 
@@ -116,22 +118,11 @@ class ProcessOccurrencesCommand extends Command
                 DB::rollBack();
                 $this->error("Erro ao processar evento {$eventInboxId}: " . $e->getMessage());
                 $this->logger->error(
-                    "Erro ao processar evento {$eventInboxId}: " . $e->getMessage(), ['exception' => $e]
+                    "Erro ao processar evento {$eventInboxId}: " . $e->getMessage(),
+                    ['exception' => $e]
                 );
 
-                try {
-                    $eventInbox = EventInbox::find($eventInboxId);
-                    if ($eventInbox) {
-                        $eventInbox->update([
-                            'status' => 'failed',
-                            'error' => $e->getMessage(),
-                            'processed_at' => now()
-                        ]);
-                    }
-                } catch (Throwable $inner) {
-                    $this->logger->error("Falha ao atualizar status de erro no EventInbox: " . $inner->getMessage());
-                }
-
+                $this->markAsFailed($eventInboxId, $e->getMessage());
                 $message->nack();
             }
         };
@@ -139,6 +130,27 @@ class ProcessOccurrencesCommand extends Command
         $this->rabbitMQClient->consume('occurrences', $callback);
 
         return 0;
+    }
+
+    protected function markAsFailed(string $eventInboxId, string $errorMessage): void
+    {
+        try {
+            $eventInbox = $this->findEventInbox($eventInboxId);
+            if ($eventInbox) {
+                $eventInbox->update([
+                    'status' => 'failed',
+                    'error' => $errorMessage,
+                    'processed_at' => now()
+                ]);
+            }
+        } catch (Throwable $inner) {
+            $this->logger->error("Falha ao atualizar status de erro no EventInbox: " . $inner->getMessage());
+        }
+    }
+
+    protected function findEventInbox(string $id): ?EventInbox
+    {
+        return EventInbox::find($id);
     }
 
     private function processCreation(array $payload, EventInbox $eventInbox): void
@@ -160,7 +172,6 @@ class ProcessOccurrencesCommand extends Command
         $result = $this->createUseCase->execute($dto);
         $occurrence = $result['occurrence'];
 
-        // Log Audit
         AuditLog::create([
             'entity_type' => 'Occurrence',
             'entity_id' => $occurrence->id,
@@ -189,6 +200,7 @@ class ProcessOccurrencesCommand extends Command
         if (!$id)
             throw new Exception("Payload inválido para resolve: id é obrigatório.");
 
+        $this->resolveUseCase->execute($id);
     }
 
     private function processDispatch(array $payload): void

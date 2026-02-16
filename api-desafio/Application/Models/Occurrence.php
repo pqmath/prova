@@ -14,6 +14,7 @@ class Occurrence extends Model
     public $incrementing = false;
 
     protected $fillable = [
+        'id',
         'external_id',
         'type',
         'status',
