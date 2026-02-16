@@ -199,14 +199,15 @@ class ProcessOccurrencesCommandTest extends TestCase
         ]);
     }
 
-    public function test_handle_logs_error_and_nacks_on_failure()
+    public function test_handle_logs_error_and_nacks_with_requeue_on_first_failure()
     {
         $event = EventInbox::create([
             'idempotency_key' => 'key-fail-1',
             'source' => 'test',
             'type' => 'occurrence.received',
             'payload' => [],
-            'status' => 'pending'
+            'status' => 'pending',
+            'publish_attempts' => 0
         ]);
 
         $rabbitMQClient = $this->createMock(RabbitMQClient::class);
@@ -228,8 +229,71 @@ class ProcessOccurrencesCommandTest extends TestCase
                 $msg->method('getBody')->willReturn($body);
                 $msg->method('getRoutingKey')->willReturn('occurrence.received');
 
-                $msg->expects($this->once())->method('nack');
+                // Expect nack(true) for requeue
+                $msg->expects($this->once())->method('nack')->with(true);
                 $msg->expects($this->never())->method('ack');
+
+                $callback($msg);
+            });
+
+        $logger->expects($this->once())->method('warning');
+
+        $command = new ProcessOccurrencesCommand(
+            $rabbitMQClient,
+            $createUseCase,
+            $this->createMock(StartOccurrenceUseCase::class),
+            $this->createMock(ResolveOccurrenceUseCase::class),
+            $this->createMock(CreateDispatchUseCase::class),
+            $logger
+        );
+
+        $command->setLaravel(app());
+        $input = new ArrayInput([]);
+        $output = new BufferedOutput();
+        $command->setOutput(new OutputStyle($input, $output));
+
+        $command->handle();
+
+        $this->assertDatabaseHas('event_inboxes', [
+            'id' => $event->id,
+            'status' => 'pending',
+            'publish_attempts' => 1
+        ]);
+    }
+
+    public function test_handle_marks_as_failed_and_acks_after_3_attempts()
+    {
+        $event = EventInbox::create([
+            'idempotency_key' => 'key-fail-3',
+            'source' => 'test',
+            'type' => 'occurrence.received',
+            'payload' => [],
+            'status' => 'pending',
+            'publish_attempts' => 2 // This execution will be the 3rd attempt
+        ]);
+
+        $rabbitMQClient = $this->createMock(RabbitMQClient::class);
+        $channel = $this->createMock(AMQPChannel::class);
+        $createUseCase = $this->createMock(CreateOccurrenceUseCase::class);
+        $logger = $this->createMock(LoggerInterface::class);
+
+        $rabbitMQClient->method('getChannel')->willReturn($channel);
+
+        $rabbitMQClient->expects($this->once())
+            ->method('consume')
+            ->willReturnCallback(function ($queue, $callback) use ($event) {
+                $body = json_encode([
+                    'event_inbox_id' => $event->id,
+                    'type' => 'occurrence.received',
+                    'payload' => []
+                ]);
+                $msg = $this->createMock(AMQPMessage::class);
+                $msg->method('getBody')->willReturn($body);
+                $msg->method('getRoutingKey')->willReturn('occurrence.received');
+
+                // Expect ack() because it failed max attempts
+                $msg->expects($this->once())->method('ack');
+                $msg->expects($this->never())->method('nack');
 
                 $callback($msg);
             });
@@ -254,7 +318,8 @@ class ProcessOccurrencesCommandTest extends TestCase
 
         $this->assertDatabaseHas('event_inboxes', [
             'id' => $event->id,
-            'status' => 'failed'
+            'status' => 'failed',
+            'publish_attempts' => 3
         ]);
     }
 
@@ -488,7 +553,8 @@ class ProcessOccurrencesCommandTest extends TestCase
             'source' => 'test',
             'type' => $type,
             'payload' => $payload,
-            'status' => 'pending'
+            'status' => 'pending',
+            'publish_attempts' => 0
         ]);
 
         // Mocks
@@ -510,11 +576,12 @@ class ProcessOccurrencesCommandTest extends TestCase
                 $msg->method('getBody')->willReturn($body);
                 $msg->method('getRoutingKey')->willReturn($type);
 
-                $msg->expects($this->once())->method('nack');
+                // Expect nack(true) for retry
+                $msg->expects($this->once())->method('nack')->with(true);
                 $callback($msg);
             });
 
-        $logger->expects($this->atLeastOnce())->method('error');
+        $logger->expects($this->atLeastOnce())->method('warning');
 
         $command = new ProcessOccurrencesCommand(
             $rabbitMQClient,
@@ -531,6 +598,12 @@ class ProcessOccurrencesCommandTest extends TestCase
         $command->setOutput(new OutputStyle($input, $output));
 
         $command->handle();
+
+        $this->assertDatabaseHas('event_inboxes', [
+            'id' => $event->id,
+            'status' => 'pending',
+            'publish_attempts' => 1
+        ]);
     }
 
     public function test_handle_acks_if_event_already_processed()
@@ -608,60 +681,5 @@ class ProcessOccurrencesCommandTest extends TestCase
         ]);
 
         $this->assertTrue($alreadyProcessedLogged, 'Failed asserting that "já processado" was logged.');
-    }
-    public function test_handle_logs_error_if_marking_as_failed_throws_exception()
-    {
-        $event = EventInbox::create([
-            'idempotency_key' => 'key-inner-fail',
-            'source' => 'test',
-            'type' => 'occurrence.received',
-            'payload' => [],
-            'status' => 'pending'
-        ]);
-
-        $rabbitMQClient = $this->createMock(RabbitMQClient::class);
-        $channel = $this->createMock(AMQPChannel::class);
-        $logger = $this->createMock(LoggerInterface::class);
-
-        $rabbitMQClient->method('getChannel')->willReturn($channel);
-
-        $rabbitMQClient->expects($this->once())
-            ->method('consume')
-            ->willReturnCallback(function ($queue, $callback) use ($event) {
-                $body = json_encode([
-                    'event_inbox_id' => $event->id,
-                    'type' => 'occurrence.received',
-                    'payload' => []
-                ]);
-                $msg = $this->createMock(AMQPMessage::class);
-                $msg->method('getBody')->willReturn($body);
-                $msg->method('getRoutingKey')->willReturn('occurrence.received');
-
-                $msg->expects($this->once())->method('nack');
-                $callback($msg);
-            });
-
-        $logger->expects($this->exactly(2))->method('error');
-
-        $command = $this->getMockBuilder(ProcessOccurrencesCommand::class)
-            ->setConstructorArgs([
-                $rabbitMQClient,
-                $this->createMock(CreateOccurrenceUseCase::class),
-                $this->createMock(StartOccurrenceUseCase::class),
-                $this->createMock(ResolveOccurrenceUseCase::class),
-                $this->createMock(CreateDispatchUseCase::class),
-                $logger
-            ])
-            ->onlyMethods(['findEventInbox'])
-            ->getMock();
-
-        $command->method('findEventInbox')->willThrowException(new Exception("DB Error"));
-
-        $command->setLaravel(app());
-        $input = new ArrayInput([]);
-        $output = new BufferedOutput();
-        $command->setOutput(new OutputStyle($input, $output));
-
-        $command->handle();
     }
 }

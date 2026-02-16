@@ -118,14 +118,40 @@ class ProcessOccurrencesCommand extends Command
 
             } catch (Throwable $e) {
                 DB::rollBack();
-                $this->error("Erro ao processar evento {$eventInboxId}: " . $e->getMessage());
-                $this->logger->error(
-                    "Erro ao processar evento {$eventInboxId}: " . $e->getMessage(),
-                    ['exception' => $e]
-                );
 
-                $this->markAsFailed($eventInboxId, $e->getMessage());
-                $message->nack();
+                try {
+                    $eventInbox = EventInbox::find($eventInboxId);
+                    if ($eventInbox) {
+                        $eventInbox->increment('publish_attempts');
+                        $eventInbox->refresh();
+
+                        if ($eventInbox->publish_attempts >= 3) {
+                            $eventInbox->update([
+                                'status' => 'failed',
+                                'error' => $e->getMessage(),
+                                'processed_at' => now()
+                            ]);
+                            $message->ack();
+                            $this->logger->error(
+                                "Evento {$eventInboxId} falhou após 3 tentativas: " . $e->getMessage()
+                            );
+                        } else {
+                            $message->nack(true);
+                            $this->logger->warning(
+                                "Erro processando evento {$eventInboxId}. Tentativa {$eventInbox->publish_attempts}/3: "
+                                . $e->getMessage()
+                            );
+                        }
+                    } else {
+                        $message->ack();
+                        $this->logger->error("Evento {$eventInboxId} não encontrado durante tratamento de erro.");
+                    }
+                } catch (Throwable $inner) {
+                    $this->logger->error(
+                        "Erro crítico ao tratar falha do evento {$eventInboxId}: " . $inner->getMessage()
+                    );
+                    $message->nack(true);
+                }
             }
         };
 
@@ -134,26 +160,6 @@ class ProcessOccurrencesCommand extends Command
         return 0;
     }
 
-    protected function markAsFailed(string $eventInboxId, string $errorMessage): void
-    {
-        try {
-            $eventInbox = $this->findEventInbox($eventInboxId);
-            if ($eventInbox) {
-                $eventInbox->update([
-                    'status' => 'failed',
-                    'error' => $errorMessage,
-                    'processed_at' => now()
-                ]);
-            }
-        } catch (Throwable $inner) {
-            $this->logger->error("Falha ao atualizar status de erro no EventInbox: " . $inner->getMessage());
-        }
-    }
-
-    protected function findEventInbox(string $id): ?EventInbox
-    {
-        return EventInbox::find($id);
-    }
 
     private function processCreation(array $payload, EventInbox $eventInbox): void
     {

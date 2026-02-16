@@ -52,9 +52,10 @@ final class ConcurrencyScenario implements ScenarioInterface
                         ->withHeaders([
                             'Content-Type' => 'application/json',
                             'Idempotency-Key' => $request['idempotency_key']->getValue(),
+                            'X-API-Key' => config('services.core_api.key'),
                         ])
                         ->post(
-                            config('core_api.url', 'http://localhost:8000') . '/api/integrations/occurrences',
+                            config('services.core_api.url') . '/api/integrations/occurrences',
                             $request['occurrence']->toArray()
                         );
                 })->all();
@@ -69,8 +70,15 @@ final class ConcurrencyScenario implements ScenarioInterface
             foreach ($httpResponses as $index => $httpResponse) {
                 $request = $requests[$index];
 
-                $statusCode = $httpResponse->status();
-                $isSuccess = $statusCode >= 200 && $statusCode < 300;
+                if ($httpResponse instanceof \Throwable) {
+                    $statusCode = 0;
+                    $isSuccess = false;
+                    $body = ['error' => $httpResponse->getMessage()];
+                } else {
+                    $statusCode = $httpResponse->status();
+                    $isSuccess = $statusCode >= 200 && $statusCode < 300;
+                    $body = $httpResponse->json();
+                }
 
                 if ($isSuccess) {
                     $successCount++;
@@ -82,7 +90,7 @@ final class ConcurrencyScenario implements ScenarioInterface
                     'idempotency_key' => $request['idempotency_key']->getValue(),
                     'status_code' => $statusCode,
                     'success' => $isSuccess,
-                    'body' => $httpResponse->json(),
+                    'body' => $body,
                 ];
 
                 $this->logger->debug("Resposta da requisição {$request['request_number']}", [
