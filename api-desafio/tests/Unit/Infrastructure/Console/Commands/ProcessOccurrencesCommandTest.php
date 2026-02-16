@@ -546,6 +546,11 @@ class ProcessOccurrencesCommandTest extends TestCase
         $this->assert_nack_on_invalid_payload('dispatch.requested', ['occurrence_id' => '1']);
     }
 
+    public function test_handle_nacks_on_invalid_creation_payload()
+    {
+        $this->assert_nack_on_invalid_payload('occurrence.created', ['externalId' => 'EXT-1']);
+    }
+
     private function assert_nack_on_invalid_payload(string $type, array $payload)
     {
         $event = EventInbox::create([
@@ -557,7 +562,6 @@ class ProcessOccurrencesCommandTest extends TestCase
             'publish_attempts' => 0
         ]);
 
-        // Mocks
         $rabbitMQClient = $this->createMock(RabbitMQClient::class);
         $channel = $this->createMock(AMQPChannel::class);
         $logger = $this->createMock(LoggerInterface::class);
@@ -576,7 +580,6 @@ class ProcessOccurrencesCommandTest extends TestCase
                 $msg->method('getBody')->willReturn($body);
                 $msg->method('getRoutingKey')->willReturn($type);
 
-                // Expect nack(true) for retry
                 $msg->expects($this->once())->method('nack')->with(true);
                 $callback($msg);
             });
@@ -681,5 +684,128 @@ class ProcessOccurrencesCommandTest extends TestCase
         ]);
 
         $this->assertTrue($alreadyProcessedLogged, 'Failed asserting that "já processado" was logged.');
+    }
+
+    public function test_handle_logs_error_when_event_not_found_during_retry()
+    {
+        $event = EventInbox::create([
+            'idempotency_key' => 'key-lost-retry',
+            'source' => 'test',
+            'type' => 'occurrence.received',
+            'payload' => ['externalId' => 'EXT-1', 'reportedAt' => '2026-01-01'],
+            'status' => 'pending'
+        ]);
+
+        $rabbitMQClient = $this->createMock(RabbitMQClient::class);
+        $channel = $this->createMock(AMQPChannel::class);
+        $logger = $this->createMock(LoggerInterface::class);
+        $createUseCase = $this->createMock(CreateOccurrenceUseCase::class);
+
+        $createUseCase->method('execute')->willThrowException(new Exception("Processing Error"));
+
+        $rabbitMQClient->method('getChannel')->willReturn($channel);
+        $rabbitMQClient->expects($this->once())
+            ->method('consume')
+            ->willReturnCallback(function ($queue, $callback) use ($event) {
+                $body = json_encode([
+                    'event_inbox_id' => $event->id,
+                    'type' => 'occurrence.received',
+                    'payload' => $event->payload
+                ]);
+                $msg = $this->createMock(AMQPMessage::class);
+                $msg->method('getBody')->willReturn($body);
+                $msg->method('getRoutingKey')->willReturn('occurrence.received');
+
+                $msg->expects($this->once())->method('ack');
+                $callback($msg);
+            });
+
+        $command = $this->getMockBuilder(ProcessOccurrencesCommand::class)
+            ->setConstructorArgs([
+                $rabbitMQClient,
+                $createUseCase,
+                $this->createMock(StartOccurrenceUseCase::class),
+                $this->createMock(ResolveOccurrenceUseCase::class),
+                $this->createMock(CreateDispatchUseCase::class),
+                $logger
+            ])
+            ->onlyMethods(['findEventInbox'])
+            ->getMock();
+
+            $command->expects($this->exactly(2))
+            ->method('findEventInbox')
+            ->willReturnOnConsecutiveCalls($event, null);
+
+        $logger->expects($this->atLeastOnce())
+            ->method('error')
+            ->with($this->stringContains('não encontrado durante tratamento de erro'));
+
+        $command->setLaravel(app());
+        $command->setOutput(new OutputStyle(new ArrayInput([]), new BufferedOutput()));
+
+        $command->handle();
+    }
+
+    public function test_handle_captures_critical_error_during_retry()
+    {
+        $event = EventInbox::create([
+            'idempotency_key' => 'key-critical-retry',
+            'source' => 'test',
+            'type' => 'occurrence.received',
+            'payload' => ['externalId' => 'EXT-1', 'reportedAt' => '2026-01-01'],
+            'status' => 'pending'
+        ]);
+
+        $rabbitMQClient = $this->createMock(RabbitMQClient::class);
+        $channel = $this->createMock(AMQPChannel::class);
+        $logger = $this->createMock(LoggerInterface::class);
+        $createUseCase = $this->createMock(CreateOccurrenceUseCase::class);
+
+        $createUseCase->method('execute')->willThrowException(new Exception("Processing Error"));
+
+        $rabbitMQClient->method('getChannel')->willReturn($channel);
+        $rabbitMQClient->expects($this->once())
+            ->method('consume')
+            ->willReturnCallback(function ($queue, $callback) use ($event) {
+                $body = json_encode([
+                    'event_inbox_id' => $event->id,
+                    'type' => 'occurrence.received',
+                    'payload' => $event->payload
+                ]);
+                $msg = $this->createMock(AMQPMessage::class);
+                $msg->method('getBody')->willReturn($body);
+                $msg->method('getRoutingKey')->willReturn('occurrence.received');
+
+                $msg->expects($this->once())->method('nack')->with(true);
+                $callback($msg);
+            });
+
+        $command = $this->getMockBuilder(ProcessOccurrencesCommand::class)
+            ->setConstructorArgs([
+                $rabbitMQClient,
+                $createUseCase,
+                $this->createMock(StartOccurrenceUseCase::class),
+                $this->createMock(ResolveOccurrenceUseCase::class),
+                $this->createMock(CreateDispatchUseCase::class),
+                $logger
+            ])
+            ->onlyMethods(['findEventInbox'])
+            ->getMock();
+
+        $command->expects($this->exactly(2))
+            ->method('findEventInbox')
+            ->willReturnOnConsecutiveCalls(
+                $event,
+                $this->throwException(new Exception("DB Down"))
+            );
+
+        $logger->expects($this->atLeastOnce())
+            ->method('error')
+            ->with($this->stringContains('Erro crítico ao tratar falha'));
+
+        $command->setLaravel(app());
+        $command->setOutput(new OutputStyle(new ArrayInput([]), new BufferedOutput()));
+
+        $command->handle();
     }
 }

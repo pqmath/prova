@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use Domain\Entities\Occurrence;
 use Domain\Interfaces\LoggerInterface;
 use Domain\ValueObjects\OccurrenceType;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use tests\TestCase;
 
@@ -118,5 +119,39 @@ class ConcurrencyScenarioTest extends TestCase
 
         $this->assertTrue($result->isFailure());
         $this->assertStringContainsString('Erro ao executar cenário: Critical Error', $result->getMessage());
+    }
+
+    public function test_execute_handles_connection_exceptions_in_pool()
+    {
+        Http::fake(function() {
+            static $count = 0;
+            $count++;
+            if ($count > 5) {
+                throw new ConnectionException('Connection Refused');
+            }
+            return Http::response(['status' => 'queued'], 202);
+        });
+
+        $factory = $this->createMock(OccurrenceFactory::class);
+        $logger = $this->createMock(LoggerInterface::class);
+
+        $occurrence = new Occurrence(
+            'EXT-123',
+            OccurrenceType::IncendioUrbano,
+            'Desc',
+            new DateTimeImmutable()
+        );
+        $factory->method('createRandom')->willReturn($occurrence);
+
+        $scenario = new ConcurrencyScenario($factory, $logger);
+        $result = $scenario->execute();
+
+        $this->assertTrue($result->isFailure());
+
+        if (str_contains($result->getMessage(), '5 de 10')) {
+            $this->assertStringContainsString('5 de 10 foram enviadas com sucesso', $result->getMessage());
+        } else {
+            $this->assertStringContainsString('Erro ao executar cenário', $result->getMessage());
+        }
     }
 }

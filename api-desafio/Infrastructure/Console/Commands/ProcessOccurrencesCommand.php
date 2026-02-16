@@ -63,7 +63,7 @@ class ProcessOccurrencesCommand extends Command
 
             DB::beginTransaction();
             try {
-                $eventInbox = EventInbox::lockForUpdate()->find($eventInboxId);
+                $eventInbox = $this->findEventInbox($eventInboxId, true);
 
                 if (!$eventInbox) {
                     DB::rollBack();
@@ -120,7 +120,7 @@ class ProcessOccurrencesCommand extends Command
                 DB::rollBack();
 
                 try {
-                    $eventInbox = EventInbox::find($eventInboxId);
+                    $eventInbox = $this->findEventInbox($eventInboxId);
                     if ($eventInbox) {
                         $eventInbox->increment('publish_attempts');
                         $eventInbox->refresh();
@@ -223,5 +223,14 @@ class ProcessOccurrencesCommand extends Command
         }
 
         $this->dispatchUseCase->execute($occurrenceId, $resourceCode, $source);
+    }
+
+    protected function findEventInbox(string $id, bool $lock = false): ?EventInbox
+    {
+        if ($lock) {
+            return EventInbox::lockForUpdate()->find($id);
+        }
+
+        return EventInbox::find($id);
     }
 }
