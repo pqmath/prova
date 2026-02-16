@@ -8,7 +8,6 @@ enum OccurrenceType: string
     case ResgateVeicular = 'resgate_veicular';
     case AtendimentoPreHospitalar = 'atendimento_pre_hospitalar';
     case SalvamentoAquatico = 'salvamento_aquatico';
-    case FalsoChamado = 'falso_chamado';
 
     public function getValue(): string
     {

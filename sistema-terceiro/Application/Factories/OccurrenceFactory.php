@@ -29,10 +29,6 @@ class OccurrenceFactory
             'Embarcação à deriva',
             'Resgate em área de mangue',
         ],
-        'falso_chamado' => [
-            'Trote verificado após deslocamento',
-            'Ocorrência inexistente no local informado',
-        ],
     ];
 
     public function createRandom(): Occurrence

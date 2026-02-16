@@ -4,10 +4,7 @@ import ThemeToggle from './ThemeToggle';
 import AuditLogModal from './AuditLogModal';
 
 function generateUUID() {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-        return v.toString(16);
-    });
+    return crypto.randomUUID();
 }
 
 const Dashboard = () => {
@@ -81,7 +78,7 @@ const Dashboard = () => {
                     <h3>{occ.type}</h3>
                     <p>{occ.description}</p>
                     <button className="btn" onClick={() => setSelectedOccurrence(occ)} style={{ marginTop: 'auto', width: '100%' }}>
-                        Ver Detalhes
+                        Detalhes
                     </button>
                 </div>
             ))}

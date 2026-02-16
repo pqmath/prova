@@ -24,7 +24,7 @@ class OccurrenceTypeTest extends TestCase
         $all = OccurrenceType::all();
         $this->assertIsArray($all);
         $this->assertContains('incendio_urbano', $all);
-        $this->assertCount(5, $all);
+        $this->assertCount(4, $all);
     }
 
     public function test_get_value_method()

@@ -8,8 +8,6 @@ use Application\UseCases\CreateDispatchUseCase;
 use Application\UseCases\CreateOccurrenceUseCase;
 use Application\UseCases\ResolveOccurrenceUseCase;
 use Application\UseCases\StartOccurrenceUseCase;
-use Domain\Entities\Occurrence;
-use Domain\Enums\OccurrenceType;
 use Domain\Services\LoggerInterface;
 use Exception;
 use Illuminate\Console\OutputStyle;
@@ -54,7 +52,6 @@ class ProcessOccurrencesCommandTest extends TestCase
         $rabbitMQClient->expects($this->once())
             ->method('consume')
             ->willReturnCallback(function ($queue, $callback) use ($event) {
-                // Construct fake AMQPMessage
                 $body = json_encode([
                     'event_inbox_id' => $event->id,
                     'type' => 'occurrence.created',
@@ -141,7 +138,6 @@ class ProcessOccurrencesCommandTest extends TestCase
 
     private function process_event($event, $routingKey, $useCaseClass)
     {
-        // Mocks
         $rabbitMQClient = $this->createMock(RabbitMQClient::class);
         $channel = $this->createMock(AMQPChannel::class);
         $createUseCase = $this->createMock(CreateOccurrenceUseCase::class);
@@ -168,11 +164,17 @@ class ProcessOccurrencesCommandTest extends TestCase
             });
 
         if ($useCaseClass === StartOccurrenceUseCase::class) {
-            $startUseCase->expects($this->once())->method('execute');
+            $startUseCase->expects($this->once())
+                ->method('execute')
+                ->with($event->payload['id'], $event->source);
         } elseif ($useCaseClass === ResolveOccurrenceUseCase::class) {
-            $resolveUseCase->expects($this->once())->method('execute');
+            $resolveUseCase->expects($this->once())
+                ->method('execute')
+                ->with($event->payload['id'], $event->source);
         } elseif ($useCaseClass === CreateDispatchUseCase::class) {
-            $dispatchUseCase->expects($this->once())->method('execute');
+            $dispatchUseCase->expects($this->once())
+                ->method('execute')
+                ->with($event->payload['occurrence_id'], $event->payload['resource_code'], $event->source);
         }
 
         $command = new ProcessOccurrencesCommand(
@@ -377,7 +379,6 @@ class ProcessOccurrencesCommandTest extends TestCase
             'status' => 'pending'
         ]);
 
-        // Mocks
         $rabbitMQClient = $this->createMock(RabbitMQClient::class);
         $channel = $this->createMock(AMQPChannel::class);
         $logger = $this->createMock(LoggerInterface::class);

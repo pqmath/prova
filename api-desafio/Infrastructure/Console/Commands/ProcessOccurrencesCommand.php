@@ -80,6 +80,7 @@ class ProcessOccurrencesCommand extends Command
                 }
 
                 $payload = $body['payload'] ?? [];
+                $source = $eventInbox->source ?? 'Sistema';
 
                 switch ($type) {
                     case 'occurrence.created':
@@ -87,18 +88,19 @@ class ProcessOccurrencesCommand extends Command
                         $this->processCreation($payload, $eventInbox);
                         break;
                     case 'occurrence.started':
-                        $this->processStart($payload);
+                        $this->processStart($payload, $source);
                         break;
                     case 'occurrence.resolved':
-                        $this->processResolve($payload);
+                        $this->processResolve($payload, $source);
                         break;
                     case 'dispatch.requested':
                     case 'dispatch.created':
-                        $this->processDispatch($payload);
+                        $this->processDispatch($payload, $source);
                         break;
                     default:
                         $this->logger->warning(
-                            "Tipo de evento desconhecido: {$type}", ['event_inbox_id' => $eventInboxId]
+                            "Tipo de evento desconhecido: {$type}",
+                            ['event_inbox_id' => $eventInboxId]
                         );
                         break;
                 }
@@ -185,10 +187,9 @@ class ProcessOccurrencesCommand extends Command
         ]);
     }
 
-    private function processStart(array $payload): void
+    private function processStart(array $payload, string $source): void
     {
         $id = $payload['id'] ?? null;
-        $source = $payload['userId'] ?? 'Sistema';
 
         if (!$id)
             throw new Exception("Payload inválido para start: id é obrigatório.");
@@ -196,10 +197,9 @@ class ProcessOccurrencesCommand extends Command
         $this->startUseCase->execute($id, $source);
     }
 
-    private function processResolve(array $payload): void
+    private function processResolve(array $payload, string $source): void
     {
         $id = $payload['id'] ?? null;
-        $source = $payload['userId'] ?? 'Sistema';
 
         if (!$id)
             throw new Exception("Payload inválido para resolve: id é obrigatório.");
@@ -207,11 +207,10 @@ class ProcessOccurrencesCommand extends Command
         $this->resolveUseCase->execute($id, $source);
     }
 
-    private function processDispatch(array $payload): void
+    private function processDispatch(array $payload, string $source): void
     {
         $occurrenceId = $payload['occurrence_id'] ?? null;
         $resourceCode = $payload['resource_code'] ?? null;
-        $source = $payload['userId'] ?? 'Sistema';
 
         if (!$occurrenceId || !$resourceCode) {
             throw new Exception("Payload inválido para despacho: occurrence_id e resource_code são obrigatórios.");

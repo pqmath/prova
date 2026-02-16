@@ -2,8 +2,6 @@
 
 namespace Tests\Unit\Infrastructure\Repositories;
 
-use Domain\Entities\Occurrence;
-use Domain\Enums\OccurrenceStatus;
 use Domain\Enums\OccurrenceType;
 use Domain\Factories\OccurrenceFactory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
