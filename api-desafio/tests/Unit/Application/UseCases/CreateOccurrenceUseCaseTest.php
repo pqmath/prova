@@ -5,8 +5,6 @@ namespace Tests\Unit\Application\UseCases;
 use Application\DTOs\CreateOccurrenceDTO;
 use Application\UseCases\CreateOccurrenceUseCase;
 use Domain\Entities\Occurrence;
-use Domain\Enums\OccurrenceStatus;
-use Domain\Enums\OccurrenceType;
 use Domain\Factories\OccurrenceFactory;
 use Domain\Repositories\OccurrenceRepositoryInterface;
 use Domain\Services\MessageBrokerInterface;

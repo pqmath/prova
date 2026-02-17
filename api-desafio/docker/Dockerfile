@@ -1,4 +1,4 @@
-FROM webdevops/php-nginx-dev:8.3
+FROM webdevops/php-nginx-dev:8.2
 
 ARG APP_ENV="local"
 ARG APP_DEBUG="true"

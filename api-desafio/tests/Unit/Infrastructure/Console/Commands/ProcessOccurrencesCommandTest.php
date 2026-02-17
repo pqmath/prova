@@ -229,7 +229,6 @@ class ProcessOccurrencesCommandTest extends TestCase
                 $msg->method('getBody')->willReturn($body);
                 $msg->method('getRoutingKey')->willReturn('occurrence.received');
 
-                // Expect nack(true) for requeue
                 $msg->expects($this->once())->method('nack')->with(true);
                 $msg->expects($this->never())->method('ack');
 
@@ -269,7 +268,7 @@ class ProcessOccurrencesCommandTest extends TestCase
             'type' => 'occurrence.received',
             'payload' => [],
             'status' => 'pending',
-            'publish_attempts' => 2 // This execution will be the 3rd attempt
+            'publish_attempts' => 2
         ]);
 
         $rabbitMQClient = $this->createMock(RabbitMQClient::class);
@@ -291,7 +290,6 @@ class ProcessOccurrencesCommandTest extends TestCase
                 $msg->method('getBody')->willReturn($body);
                 $msg->method('getRoutingKey')->willReturn('occurrence.received');
 
-                // Expect ack() because it failed max attempts
                 $msg->expects($this->once())->method('ack');
                 $msg->expects($this->never())->method('nack');
 

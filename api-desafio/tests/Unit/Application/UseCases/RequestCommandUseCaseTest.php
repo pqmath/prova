@@ -5,7 +5,6 @@ namespace Tests\Unit\Application\UseCases;
 use Application\Models\EventInbox;
 use Application\UseCases\RequestCommandUseCase;
 use Domain\Services\LoggerInterface;
-use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 

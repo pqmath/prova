@@ -3,7 +3,6 @@
 namespace Tests\Unit\Infrastructure\Repositories;
 
 use Domain\Entities\Dispatch;
-use Domain\Entities\Occurrence;
 use Domain\Factories\OccurrenceFactory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Infrastructure\Repositories\DispatchRepository;

@@ -2,12 +2,8 @@
 
 namespace Tests\Unit\Application\UseCases;
 
-use Application\Models\AuditLog;
 use Application\UseCases\CreateDispatchUseCase;
 use Domain\Entities\Dispatch;
-use Domain\Entities\Occurrence;
-use Domain\Enums\DispatchStatus;
-use Domain\Enums\OccurrenceType;
 use Domain\Factories\OccurrenceFactory;
 use Domain\Repositories\DispatchRepositoryInterface;
 use Domain\Repositories\OccurrenceRepositoryInterface;

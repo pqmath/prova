@@ -2,7 +2,6 @@
 
 namespace Tests\Unit\Infrastructure\Console\Commands;
 
-use Application\Models\AuditLog;
 use Application\Models\Dispatch;
 use Application\Models\Occurrence;
 use Illuminate\Foundation\Testing\DatabaseMigrations;

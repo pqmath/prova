@@ -2,11 +2,9 @@
 
 namespace Tests\Unit\Application\UseCases;
 
-use Application\Models\AuditLog;
 use Application\UseCases\StartOccurrenceUseCase;
 use Domain\Entities\Occurrence;
 use Domain\Enums\OccurrenceStatus;
-use Domain\Enums\OccurrenceType;
 use Domain\Factories\OccurrenceFactory;
 use Domain\Repositories\OccurrenceRepositoryInterface;
 use Illuminate\Foundation\Testing\RefreshDatabase;
