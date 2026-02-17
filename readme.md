@@ -154,6 +154,7 @@ Devido ao escopo e tempo do desafio:
 1. Autenticação/Autorização Avançada (OAuth2/JWT).
 2. Dead Letter Queues (DLQ), poderia implementar no Retry.
 3. Pipeline de CI/CD completa.
+4. Validação de: se a viatura já foi despachada, não permitir despachar novamente a mesma unidade.
 
 ---
 
