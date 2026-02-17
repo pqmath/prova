@@ -31,6 +31,8 @@ services:
     environment:
       - APP_ENV=local
       - APP_DEBUG=true
+      - SESSION_DRIVER=file
+      - CACHE_STORE=file
       - CORE_API_URL=http://api-desafio:80
       - CORE_API_KEY=bombeiros-api-key-2026
       - XDEBUG_MODE=coverage,debug
