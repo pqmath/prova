@@ -5,7 +5,6 @@ namespace tests\Unit\Application\Providers;
 use Application\Services\ScenarioExecutor;
 use Domain\Interfaces\CoreApiClientInterface;
 use Domain\Interfaces\LoggerInterface;
-use Domain\Interfaces\ScenarioInterface;
 use Infrastructure\Adapters\HttpCoreApiClient;
 use Infrastructure\Adapters\LaravelLogger;
 use tests\TestCase;
@@ -30,8 +29,11 @@ class AppServiceProviderTest extends TestCase
 
     public function test_scenarios_are_registered_in_executor()
     {
-        // Mock logger to avoid permission issues during test execution
         $this->mock(LoggerInterface::class, function ($mock) {
+            $mock->shouldIgnoreMissing();
+        });
+
+        $this->mock(CoreApiClientInterface::class, function ($mock) {
             $mock->shouldIgnoreMissing();
         });
 

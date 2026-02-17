@@ -9,19 +9,16 @@ use Domain\Entities\Occurrence;
 use Domain\Interfaces\CoreApiClientInterface;
 use Domain\Interfaces\LoggerInterface;
 use Domain\ValueObjects\OccurrenceType;
-use Domain\ValueObjects\ScenarioResult;
 use PHPUnit\Framework\TestCase;
 
 class HappyPathScenarioTest extends TestCase
 {
     public function test_execute_successfully()
     {
-        // Mocks
         $factory = $this->createMock(OccurrenceFactory::class);
         $apiClient = $this->createMock(CoreApiClientInterface::class);
         $logger = $this->createMock(LoggerInterface::class);
 
-        // Factories return a valid occurrence
         $occurrence = new Occurrence(
             'EXT-123',
             OccurrenceType::IncendioUrbano,
@@ -30,11 +27,9 @@ class HappyPathScenarioTest extends TestCase
         );
         $factory->method('createRandom')->willReturn($occurrence);
 
-        // API client returns success
         $response = new ApiResponse(202, ['status' => 'queued']);
         $apiClient->method('sendOccurrence')->willReturn($response);
 
-        // Logger expects calls
         $logger->expects($this->atLeastOnce())->method('info');
 
         $scenario = new HappyPathScenario($factory, $apiClient, $logger);
@@ -59,7 +54,6 @@ class HappyPathScenarioTest extends TestCase
         );
         $factory->method('createRandom')->willReturn($occurrence);
 
-        // API client returns failure
         $response = new ApiResponse(500, ['error' => 'Server Error']);
         $apiClient->method('sendOccurrence')->willReturn($response);
 

@@ -2,11 +2,13 @@
 
 namespace tests\Unit\Infrastructure\Adapters;
 
+use DateTimeImmutable;
 use Domain\Entities\Occurrence;
+use Domain\ValueObjects\IdempotencyKey;
 use Domain\ValueObjects\OccurrenceType;
+use Exception;
 use Illuminate\Support\Facades\Http;
 use Infrastructure\Adapters\HttpCoreApiClient;
-use Psr\Log\LoggerInterface;
 use tests\TestCase;
 
 class HttpCoreApiClientTest extends TestCase
@@ -16,7 +18,6 @@ class HttpCoreApiClientTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        // BaseUrl, ApiKey, Timeout
         $this->client = new HttpCoreApiClient('http://test-api.com', 'test-key', 3);
     }
 
@@ -40,8 +41,8 @@ class HttpCoreApiClientTest extends TestCase
 
     public function test_check_health_returns_false_on_exception()
     {
-        Http::fake(function ($request) {
-            throw new \Exception('Network error');
+        Http::fake(function() {
+            throw new Exception('Network error');
         });
 
         $this->assertFalse($this->client->checkHealth());
@@ -53,14 +54,14 @@ class HttpCoreApiClientTest extends TestCase
             '*/occurrences' => Http::response(['id' => '123'], 201),
         ]);
 
-        $occurrence = new \Domain\Entities\Occurrence(
+        $occurrence = new Occurrence(
             'EXT-123',
-            \Domain\ValueObjects\OccurrenceType::IncendioUrbano,
+            OccurrenceType::IncendioUrbano,
             'Test description',
-            new \DateTimeImmutable()
+            new DateTimeImmutable()
         );
 
-        $key = new \Domain\ValueObjects\IdempotencyKey('key-123');
+        $key = new IdempotencyKey('key-123');
 
         $response = $this->client->sendOccurrence($occurrence, $key);
 
@@ -70,18 +71,18 @@ class HttpCoreApiClientTest extends TestCase
 
     public function test_send_occurrence_returns_error_on_exception()
     {
-        Http::fake(function ($request) {
-            throw new \Exception('Connection refused');
+        Http::fake(function() {
+            throw new Exception('Connection refused');
         });
 
-        $occurrence = new \Domain\Entities\Occurrence(
+        $occurrence = new Occurrence(
             'EXT-123',
-            \Domain\ValueObjects\OccurrenceType::IncendioUrbano,
+            OccurrenceType::IncendioUrbano,
             'Test description',
-            new \DateTimeImmutable()
+            new DateTimeImmutable()
         );
 
-        $key = new \Domain\ValueObjects\IdempotencyKey('key-123');
+        $key = new IdempotencyKey('key-123');
 
         $response = $this->client->sendOccurrence($occurrence, $key);
 

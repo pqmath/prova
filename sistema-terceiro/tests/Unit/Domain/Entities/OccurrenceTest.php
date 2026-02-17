@@ -2,6 +2,7 @@
 
 namespace tests\Unit\Domain\Entities;
 
+use DateTimeImmutable;
 use Domain\Entities\Occurrence;
 use Domain\ValueObjects\OccurrenceType;
 use PHPUnit\Framework\TestCase;
@@ -15,7 +16,7 @@ class OccurrenceTest extends TestCase
             'EXT-123',
             OccurrenceType::IncendioUrbano,
             'Descrição teste',
-            new \DateTimeImmutable()
+            new DateTimeImmutable()
         );
 
         $this->assertEquals('EXT-123', $occurrence->getExternalId());
@@ -32,7 +33,7 @@ class OccurrenceTest extends TestCase
             '',
             OccurrenceType::IncendioUrbano,
             'Descrição teste',
-            new \DateTimeImmutable()
+            new DateTimeImmutable()
         );
     }
 
@@ -45,7 +46,7 @@ class OccurrenceTest extends TestCase
             str_repeat('a', 101),
             OccurrenceType::IncendioUrbano,
             'Descrição teste',
-            new \DateTimeImmutable()
+            new DateTimeImmutable()
         );
     }
 
@@ -58,7 +59,7 @@ class OccurrenceTest extends TestCase
             'EXT-123',
             OccurrenceType::IncendioUrbano,
             '',
-            new \DateTimeImmutable()
+            new DateTimeImmutable()
         );
     }
 
@@ -71,13 +72,13 @@ class OccurrenceTest extends TestCase
             'EXT-123',
             OccurrenceType::IncendioUrbano,
             str_repeat('a', 501),
-            new \DateTimeImmutable()
+            new DateTimeImmutable()
         );
     }
 
     public function test_to_array_returns_correct_structure()
     {
-        $date = new \DateTimeImmutable('2026-01-01 12:00:00');
+        $date = new DateTimeImmutable('2026-01-01 12:00:00');
         $occurrence = new Occurrence(
             'EXT-123',
             OccurrenceType::ResgateVeicular,
@@ -99,7 +100,7 @@ class OccurrenceTest extends TestCase
             'EXT-123',
             OccurrenceType::IncendioUrbano,
             'Original',
-            new \DateTimeImmutable()
+            new DateTimeImmutable()
         );
 
         $newOccurrence = $occurrence->withUpdatedDescription('Updated');
@@ -112,7 +113,7 @@ class OccurrenceTest extends TestCase
 
     public function test_has_reported_at()
     {
-        $date = new \DateTimeImmutable('2024-01-01 10:00:00');
+        $date = new DateTimeImmutable('2024-01-01 10:00:00');
         $occurrence = new Occurrence(
             'EXT-123',
             OccurrenceType::IncendioUrbano,

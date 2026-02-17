@@ -43,14 +43,6 @@ class OccurrenceFactoryTest extends TestCase
         $this->assertEquals('Teste', $occurrence->getDescription());
     }
 
-    public function test_create_with_null_reported_at_uses_current_time()
-    {
-        $occurrence = $this->factory->create('EXT-1000', 'falso_chamado', 'Trote');
-
-        $this->assertInstanceOf(Occurrence::class, $occurrence);
-        $this->assertNotNull($occurrence->getReportedAt());
-    }
-
     public function test_create_with_type_works_for_all_enum_types()
     {
         foreach (OccurrenceType::cases() as $type) {

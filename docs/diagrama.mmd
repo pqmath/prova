@@ -1,0 +1,67 @@
+flowchart LR
+    %% ESTILOS
+    classDef external fill:#333,stroke:#666,stroke-width:2px,color:#fff;
+    classDef app fill:#fff,stroke:#333,stroke-width:2px;
+    classDef domain fill:#fff,stroke:#333,stroke-width:2px;
+    classDef infra fill:#fff,stroke:#333,stroke-width:2px;
+    classDef db fill:#fff,stroke:#333,stroke-width:3px;
+    classDef queue fill:#fffbe6,stroke:#f0a500,stroke-width:2px;
+    classDef worker fill:#e8f5e9,stroke:#388e3c,stroke-width:2px;
+
+    %% SISTEMA EXTERNO
+    EXT["Sistema Terceiro"]:::external
+
+    %% API DE OCORRÊNCIAS
+    subgraph API["API de Ocorrências"]
+        direction TB
+
+        subgraph APP_LAYER["Application Layer"]
+            CTRL["Controller"]:::app
+            INBOX["Event Inbox (idempotency_key unique)"]:::app
+            USE_CASES["Use Cases (Create / Start / Resolve / Dispatch)"]:::app
+        end
+
+        subgraph DOMAIN["Domain"]
+            RULES["Regras de Negocio (validacao de status)"]:::domain
+            ENTITIES["Entities: Occurrence, Dispatch"]:::domain
+        end
+
+        subgraph INFRA["Infrastructure"]
+            PUBLISHER["PublishPendingEventsCommand (Scheduler)"]:::worker
+            RABBITMQ[("RabbitMQ - fila: occurrences")]:::queue
+            WORKER["ProcessOccurrencesCommand (Worker)"]:::worker
+            RETRY["Retry Handler (3 tentativas)"]:::infra
+            REPOS["Repositories (Occurrence, Dispatch, AuditLog, EventInbox)"]:::infra
+            AUDIT["AuditLogRepository"]:::infra
+        end
+
+        DB[("PostgreSQL")]:::db
+    end
+
+    %% FLUXO DE ENTRADA
+    EXT -->|"POST + Idempotency-Key"| CTRL
+    CTRL -->|"registra se nao existir"| INBOX
+    INBOX -->|"status: pending"| DB
+
+    %% FLUXO DE PUBLICACAO
+    PUBLISHER -->|"busca pending"| DB
+    PUBLISHER -->|"publish"| RABBITMQ
+    PUBLISHER -->|"status: published"| DB
+
+    %% FLUXO DO WORKER
+    RABBITMQ -->|"consume"| WORKER
+    WORKER --> RETRY
+    RETRY -->|"sucesso: ack + processed"| DB
+    RETRY -->|"3 falhas: ack + failed"| DB
+    RETRY -->|"falha temp: nack + requeue"| RABBITMQ
+
+    %% FLUXO DE NEGOCIO
+    WORKER -->|"executa"| USE_CASES
+    USE_CASES --> RULES
+    RULES --> ENTITIES
+    USE_CASES -->|"findByIdForUpdate"| REPOS
+    REPOS -->|"save"| DB
+
+    %% AUDITORIA
+    USE_CASES -->|"log before/after/source"| AUDIT
+    AUDIT -->|"persiste"| DB

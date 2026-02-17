@@ -1,10 +1,29 @@
+x-common-env: &common-env
+  APP_ENV: local
+  APP_DEBUG: true
+  DB_CONNECTION: pgsql
+  DB_HOST: bombeiros-postgres
+  DB_PORT: 5432
+  DB_DATABASE: bombeiros
+  DB_USERNAME: admin
+  DB_PASSWORD: admin
+  QUEUE_CONNECTION: rabbitmq
+  RABBITMQ_HOST: rabbitmq
+  RABBITMQ_PORT: 5672
+  RABBITMQ_USER: admin
+  RABBITMQ_PASSWORD: admin
+  RABBITMQ_VHOST: /
+  WEB_DOCUMENT_ROOT: /app/public
+  API_KEY: bombeiros-api-key-2026
+  SESSION_DRIVER: file
+  CACHE_STORE: file
+
 services:
   sistema-terceiro:
     build:
       context: ./sistema-terceiro
       dockerfile: docker/Dockerfile
     container_name: bombeiros-sistema-terceiro
-
     ports:
       - "8000:80"
     volumes:
@@ -12,70 +31,124 @@ services:
     environment:
       - APP_ENV=local
       - APP_DEBUG=true
-      - CORE_API_URL=http://api-core:80
+      - SESSION_DRIVER=file
+      - CACHE_STORE=file
+      - CORE_API_URL=http://api-desafio:80
       - CORE_API_KEY=bombeiros-api-key-2026
       - XDEBUG_MODE=coverage,debug
       - WEB_DOCUMENT_ROOT=/app/public
-    working_dir: /app # Adicione isso
+    working_dir: /app
     networks:
       - bombeiros-network
     restart: unless-stopped
-  # api-core:
-  #   build:
-  #     context: ./api-core
-  #     dockerfile: Dockerfile
-  #   container_name: bombeiros-api-core
-  #   ports:
-  #     - "8011:80"
-  #   volumes:
-  #     - ./api-core:/var/www/html
-  #   environment:
-  #     - APP_ENV=local
-  #     - APP_DEBUG=true
-  #     - DB_HOST=postgres
-  #     - DB_DATABASE=bombeiros_db
-  #     - DB_USERNAME=bombeiros_user
-  #     - DB_PASSWORD=bombeiros_pass
-  #     - RABBITMQ_HOST=rabbitmq
-  #     - QUEUE_CONNECTION=rabbitmq
-  #   networks:
-  #     - bombeiros-network
-  #   depends_on:
-  #     - postgres
-  #     - rabbitmq
 
-  # postgres:
-  #   image: postgres:16-alpine
-  #   container_name: bombeiros-postgres
-  #   ports:
-  #     - "5432:5432"
-  #   environment:
-  #     - POSTGRES_DB=bombeiros_db
-  #     - POSTGRES_USER=bombeiros_user
-  #     - POSTGRES_PASSWORD=bombeiros_pass
-  #   volumes:
-  #     - postgres-data:/var/lib/postgresql/data
-  #   networks:
-  #     - bombeiros-network
+  api-desafio:
+    build:
+      context: ./api-desafio
+      dockerfile: docker/Dockerfile
+    container_name: bombeiros-api-desafio
+    ports:
+      - "8001:80"
+    volumes:
+      - ./api-desafio:/app
+    environment:
+      <<: *common-env
+    working_dir: /app
+    networks:
+      - bombeiros-network
+    depends_on:
+      - postgres
+      - rabbitmq
+    restart: unless-stopped
 
-  # rabbitmq:
-  #   image: rabbitmq:3.13-management-alpine
-  #   container_name: bombeiros-rabbitmq
-  #   ports:
-  #     - "5672:5672"
-  #     - "15672:15672"
-  #   environment:
-  #     - RABBITMQ_DEFAULT_USER=bombeiros
-  #     - RABBITMQ_DEFAULT_PASS=bombeiros123
-  #   volumes:
-  #     - rabbitmq-data:/var/lib/rabbitmq
-  #   networks:
-  #     - bombeiros-network
+  api-desafio-scheduler:
+    build:
+      context: ./api-desafio
+      dockerfile: docker/Dockerfile
+    container_name: bombeiros-scheduler
+    volumes:
+      - ./api-desafio:/app
+    environment:
+      <<: *common-env
+    working_dir: /app
+    networks:
+      - bombeiros-network
+    depends_on:
+      - postgres
+      - rabbitmq
+    restart: unless-stopped
+    command: php artisan schedule:work
+
+  api-desafio-worker:
+    build:
+      context: ./api-desafio
+      dockerfile: docker/Dockerfile
+    container_name: bombeiros-worker
+    volumes:
+      - ./api-desafio:/app
+    environment:
+      <<: *common-env
+    working_dir: /app
+    networks:
+      - bombeiros-network
+    depends_on:
+      - postgres
+      - rabbitmq
+    restart: unless-stopped
+    command: php artisan rabbitmq:consume-occurrences
+
+  api-desafio-simulator:
+    build:
+      context: ./api-desafio
+      dockerfile: docker/Dockerfile
+    container_name: bombeiros-simulator
+    volumes:
+      - ./api-desafio:/app
+    environment:
+      <<: *common-env
+    working_dir: /app
+    networks:
+      - bombeiros-network
+    depends_on:
+      - postgres
+      - rabbitmq
+    restart: unless-stopped
+    command: php artisan simulate:movement
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: bombeiros-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=bombeiros
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - bombeiros-network
+    restart: unless-stopped
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: bombeiros-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=admin
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - bombeiros-network
+    restart: unless-stopped
 
 networks:
   bombeiros-network:
     driver: bridge
 
-# volumes:
-#   postgres-data:
-#   rabbitmq-data:
+volumes:
+  postgres-data:
+  rabbitmq-data:

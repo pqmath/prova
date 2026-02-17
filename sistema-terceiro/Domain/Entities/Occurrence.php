@@ -6,22 +6,19 @@ use Domain\ValueObjects\OccurrenceType;
 use DateTimeImmutable;
 use InvalidArgumentException;
 
-class Occurrence
+final readonly class Occurrence
 {
-    private string $externalId;
-    private string $description;
-
     public function __construct(
-        string $externalId,
-        private readonly OccurrenceType $type,
-        string $description,
-        private readonly DateTimeImmutable $reportedAt
+        public string $externalId,
+        public OccurrenceType $type,
+        public string $description,
+        public DateTimeImmutable $reportedAt
     ) {
-        $this->setExternalId($externalId);
-        $this->setDescription($description);
+        $this->validateExternalId($externalId);
+        $this->validateDescription($description);
     }
 
-    private function setExternalId(string $externalId): void
+    private function validateExternalId(string $externalId): void
     {
         if (empty(trim($externalId))) {
             throw new InvalidArgumentException('External ID não pode ser vazio');
@@ -30,11 +27,9 @@ class Occurrence
         if (strlen($externalId) > 100) {
             throw new InvalidArgumentException('External ID não pode ter mais de 100 caracteres');
         }
-
-        $this->externalId = $externalId;
     }
 
-    private function setDescription(string $description): void
+    private function validateDescription(string $description): void
     {
         if (empty(trim($description))) {
             throw new InvalidArgumentException('Descrição não pode ser vazia');
@@ -43,8 +38,6 @@ class Occurrence
         if (strlen($description) > 500) {
             throw new InvalidArgumentException('Descrição não pode ter mais de 500 caracteres');
         }
-
-        $this->description = $description;
     }
 
     public function getExternalId(): string

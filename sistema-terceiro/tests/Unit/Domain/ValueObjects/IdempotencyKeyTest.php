@@ -12,7 +12,7 @@ class IdempotencyKeyTest extends TestCase
     {
         $key = IdempotencyKey::generate();
         $this->assertNotEmpty($key->getValue());
-        $this->assertEquals(36, strlen($key->getValue())); // UUID length
+        $this->assertEquals(36, strlen($key->getValue()));
     }
 
     public function test_can_create_from_string()

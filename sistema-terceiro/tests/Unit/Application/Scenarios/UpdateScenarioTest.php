@@ -27,7 +27,6 @@ class UpdateScenarioTest extends TestCase
         );
         $factory->method('createRandom')->willReturn($occurrence);
 
-        // Expects sendOccurrence to be called twice (create first, then update)
         $apiClient->expects($this->exactly(2))
             ->method('sendOccurrence')
             ->willReturn(new ApiResponse(202, ['status' => 'queued']));
@@ -62,7 +61,6 @@ class UpdateScenarioTest extends TestCase
         );
         $factory->method('createRandom')->willReturn($occurrence);
 
-        // Creation succeeds, update fails
         $apiClient->method('sendOccurrence')->willReturnOnConsecutiveCalls(
             new ApiResponse(202, ['status' => 'created']),
             new ApiResponse(500, ['error' => 'fail'])
