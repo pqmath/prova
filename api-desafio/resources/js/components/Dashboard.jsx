@@ -56,11 +56,11 @@ const Dashboard = () => {
                     'Idempotency-Key': idempotencyKey
                 }
             });
-            alert(`Ação ${action} solicitada com sucesso!`);
-            fetchOccurrences(false);
+            await fetchOccurrences(false);
         } catch (error) {
             console.error(`Error performing ${action}:`, error);
             alert(`Erro ao executar ${action}: ${error.response?.data?.error || error.message}`);
+        } finally {
             setLoading(false);
         }
     };
@@ -77,7 +77,7 @@ const Dashboard = () => {
                     </div>
                     <h3>{occ.type}</h3>
                     <p>{occ.description}</p>
-                    <button className="btn" onClick={() => setSelectedOccurrence(occ)} style={{ marginTop: 'auto', width: '100%' }}>
+                    <button className="btn" onClick={() => setSelectedOccurrence(occ)} disabled={loading} style={{ marginTop: 'auto', width: '100%' }}>
                         Detalhes
                     </button>
                 </div>
@@ -90,7 +90,7 @@ const Dashboard = () => {
         const occ = selectedOccurrence;
         return (
             <div>
-                <button className="btn" onClick={() => setSelectedOccurrence(null)} style={{ marginBottom: '1rem', width: 'auto' }}>
+                <button className="btn" onClick={() => setSelectedOccurrence(null)} disabled={loading} style={{ marginBottom: '1rem', width: 'auto' }}>
                     &larr; Voltar para Lista
                 </button>
 
@@ -160,7 +160,7 @@ const Dashboard = () => {
                             ) : (
                                 <div className="actions" style={{ flexDirection: 'column' }}>
                                     {occ.status === 'reported' && (
-                                        <button className="btn" onClick={() => handleAction(occ.id, 'start')} style={{ width: '100%' }}>
+                                        <button className="btn" onClick={() => handleAction(occ.id, 'start')} disabled={loading} style={{ width: '100%' }}>
                                             Iniciar Atendimento
                                         </button>
                                     )}
@@ -172,6 +172,7 @@ const Dashboard = () => {
                                                 <select
                                                     value={selectedResource}
                                                     onChange={(e) => setSelectedResource(e.target.value)}
+                                                    disabled={loading}
                                                     style={{
                                                         width: '100%',
                                                         padding: '0.5rem',
@@ -188,11 +189,11 @@ const Dashboard = () => {
                                                     <option value="AR-01">AR-01 (Auto Rápido)</option>
                                                 </select>
                                             </div>
-                                            <button className="btn" onClick={() => handleAction(occ.id, 'dispatches', { resourceCode: selectedResource })} style={{ width: '100%' }}>
+                                            <button className="btn" onClick={() => handleAction(occ.id, 'dispatches', { resourceCode: selectedResource })} disabled={loading} style={{ width: '100%' }}>
                                                 Despachar Viatura
                                             </button>
                                             <hr style={{ width: '100%', borderColor: 'var(--border-color)', margin: '1rem 0' }} />
-                                            <button className="btn" onClick={() => handleAction(occ.id, 'resolve')} style={{ width: '100%', backgroundColor: '#28a745', border: '1px solid #1e7e34', fontWeight: 'bold' }}>
+                                            <button className="btn" onClick={() => handleAction(occ.id, 'resolve')} disabled={loading} style={{ width: '100%', backgroundColor: '#28a745', border: '1px solid #1e7e34', fontWeight: 'bold' }}>
                                                 Resolver Ocorrência
                                             </button>
                                         </>
