@@ -14,9 +14,9 @@ O projeto utiliza Docker para orquestrar todos os serviços (PHP 8.2, PostgreSQL
 
 ---
 
-### Para executar o projeto (Recomendado via Makefile)
+### Para executar o projeto (via makefile):
 
-O projeto inclui um `Makefile` para automatizar todo o processo. Se você tiver `make` instalado (Linux/Mac/WSL), basta rodar:
+O projeto inclui um `Makefile` para automatizar todo o processo. Certifique-se de ter o `make` instalado (ou use WSL no Windows).
 
 1. **Subir os containers**:
    ```bash
@@ -28,7 +28,6 @@ O projeto inclui um `Makefile` para automatizar todo o processo. Se você tiver 
    make setup
    ```
    *Isso executará o setup tanto da API quanto do Sistema Terceiro.*
-
 
 3. **Rodar Testes com Coverage**:
    ```bash
@@ -88,7 +87,7 @@ O sistema segue os princípios de Clean Architecture e DDD, isolando as regras d
 <img src="docs/diagrama.png" alt="Desenho de Arquitetura" width="2326">
 
 ---
-
+    
 ## Estratégia de integração externa
 
 A integração entre o **Sistema Terceiro** e a **API Desafio** é feita via **HTTP** com processamento assíncrono via **RabbitMQ**.
