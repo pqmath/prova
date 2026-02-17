@@ -71,6 +71,26 @@ class OccurrenceRepository implements OccurrenceRepositoryInterface
         );
     }
 
+    public function findByIdForUpdate(string $id): ?Occurrence
+    {
+        $model = EloquentOccurrence::lockForUpdate()->find($id);
+
+        if (!$model) {
+            return null;
+        }
+
+        return $this->factory->reconstitute(
+            $model->id,
+            $model->external_id,
+            $model->type,
+            $model->status,
+            $model->description,
+            $model->reported_at->format('Y-m-d H:i:s'),
+            $model->created_at->format('Y-m-d H:i:s'),
+            $model->updated_at->format('Y-m-d H:i:s')
+        );
+    }
+
     public function list(array $filters): array
     {
         $query = EloquentOccurrence::with('dispatches');

@@ -3,16 +3,17 @@
 namespace Application\UseCases;
 
 use Domain\Entities\Dispatch;
+use Domain\Repositories\AuditLogRepositoryInterface;
 use Domain\Repositories\DispatchRepositoryInterface;
 use Domain\Repositories\OccurrenceRepositoryInterface;
-use Application\Models\AuditLog;
 use Exception;
 
 class CreateDispatchUseCase
 {
     public function __construct(
         private readonly DispatchRepositoryInterface $dispatchRepository,
-        private readonly OccurrenceRepositoryInterface $occurrenceRepository
+        private readonly OccurrenceRepositoryInterface $occurrenceRepository,
+        private readonly AuditLogRepositoryInterface $auditLogRepository
     ) {
     }
 
@@ -27,14 +28,15 @@ class CreateDispatchUseCase
         $dispatch = Dispatch::create($occurrenceId, $resourceCode);
         $this->dispatchRepository->save($dispatch);
 
-        AuditLog::create([
-            'entity_type' => 'Dispatch',
-            'entity_id' => $dispatch->id,
-            'action' => 'created',
-            'source' => $source,
-            'after' => (array) $dispatch,
-            'meta' => ['occurrence_id' => $occurrenceId]
-        ]);
+        $this->auditLogRepository->log(
+            'Dispatch',
+            $dispatch->id,
+            'created',
+            $source,
+            null,
+            (array) $dispatch,
+            ['occurrence_id' => $occurrenceId]
+        );
 
         return $dispatch;
     }

@@ -82,4 +82,21 @@ class OccurrenceRepositoryTest extends TestCase
         $resultsStatus = $this->repository->list(['status' => 'reported']);
         $this->assertCount(3, $resultsStatus['data']);
     }
+
+    public function test_find_by_id_for_update_returns_occurrence()
+    {
+        $occurrence = $this->factory->create('EXT-LOCK-001', 'incendio_urbano', 'Lock Test', '2026-01-01');
+        $this->repository->save($occurrence);
+
+        $retrieved = $this->repository->findByIdForUpdate($occurrence->id);
+
+        $this->assertNotNull($retrieved);
+        $this->assertEquals($occurrence->id, $retrieved->id);
+    }
+
+    public function test_find_by_id_for_update_returns_null_when_not_found()
+    {
+        $retrieved = $this->repository->findByIdForUpdate('non-existent');
+        $this->assertNull($retrieved);
+    }
 }

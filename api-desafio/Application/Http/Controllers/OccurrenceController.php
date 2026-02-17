@@ -4,6 +4,7 @@ namespace Application\Http\Controllers;
 
 use Application\UseCases\ListOccurrencesUseCase;
 use Application\UseCases\RequestCommandUseCase;
+use Domain\Repositories\OccurrenceRepositoryInterface;
 use Domain\Services\LoggerInterface;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -13,7 +14,8 @@ class OccurrenceController extends Controller
     public function __construct(
         private readonly ListOccurrencesUseCase $listUseCase,
         private readonly RequestCommandUseCase $requestCommand,
-        private readonly LoggerInterface $logger
+        private readonly LoggerInterface $logger,
+        private readonly OccurrenceRepositoryInterface $repository
     ) {
     }
 
@@ -24,6 +26,18 @@ class OccurrenceController extends Controller
 
         $occurrences = $this->listUseCase->execute($filters);
         return response()->json($occurrences);
+    }
+
+    public function show(string $id): JsonResponse
+    {
+        $this->logger->debug("Buscando detalhe da ocorrência {$id}");
+        $occurrence = $this->repository->findById($id);
+
+        if (!$occurrence) {
+            return response()->json(['error' => 'Occurrence not found'], 404);
+        }
+
+        return response()->json($occurrence);
     }
 
     public function start(Request $request, string $id): JsonResponse

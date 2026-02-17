@@ -2,6 +2,7 @@
 
 namespace Application\Providers;
 
+use Domain\Repositories\AuditLogRepositoryInterface;
 use Domain\Repositories\DispatchRepositoryInterface;
 use Domain\Repositories\EventInboxRepositoryInterface;
 use Domain\Repositories\OccurrenceRepositoryInterface;
@@ -11,6 +12,7 @@ use Illuminate\Support\ServiceProvider;
 use Infrastructure\Adapters\LaravelLoggerAdapter;
 use Infrastructure\Console\Commands\ProcessOccurrencesCommand;
 use Infrastructure\Console\Commands\PublishPendingEventsCommand;
+use Infrastructure\Repositories\AuditLogRepository;
 use Infrastructure\Repositories\DispatchRepository;
 use Infrastructure\Repositories\EventInboxRepository;
 use Infrastructure\Repositories\OccurrenceRepository;
@@ -59,6 +61,11 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             LoggerInterface::class,
             LaravelLoggerAdapter::class
+        );
+
+        $this->app->bind(
+            AuditLogRepositoryInterface::class,
+            AuditLogRepository::class
         );
     }
 

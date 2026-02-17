@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use Application\UseCases\RequestCommandUseCase;
 use Domain\Factories\OccurrenceFactory;
 use Domain\Repositories\OccurrenceRepositoryInterface;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -124,5 +125,59 @@ class OccurrenceControllerTest extends TestCase
             ->postJson("/api/occurrences/{$uuid}/resolve")
             ->assertStatus(400)
             ->assertJson(['error' => 'Idempotency-Key header is required']);
+    }
+
+    public function test_can_retrieve_occurrence_details()
+    {
+        $factory = new OccurrenceFactory();
+        $repo = app(OccurrenceRepositoryInterface::class);
+
+        $occ = $factory->create('EXT-DETAIL-1', 'incendio_urbano', 'Detalhes', '2026-01-01');
+        $repo->save($occ);
+
+        $response = $this->withHeaders(['X-API-Key' => 'bombeiros-api-key-2026'])
+            ->getJson("/api/occurrences/{$occ->id}");
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'id' => $occ->id,
+                'externalId' => 'EXT-DETAIL-1'
+            ]);
+    }
+
+    public function test_returns_404_if_occurrence_detail_not_found()
+    {
+        $this->withHeaders(['X-API-Key' => 'bombeiros-api-key-2026'])
+            ->getJson("/api/occurrences/non-existent-id")
+            ->assertStatus(404)
+            ->assertJson(['error' => 'Occurrence not found']);
+    }
+
+    public function test_start_occurrence_handles_exceptions()
+    {
+        $this->mock(RequestCommandUseCase::class, function ($mock) {
+            $mock->shouldReceive('execute')->andThrow(new \Exception('Simulated start error'));
+        });
+
+        $this->withHeaders([
+            'X-API-Key' => 'bombeiros-api-key-2026',
+            'Idempotency-Key' => Str::uuid()->toString()
+        ])->postJson("/api/occurrences/any-id/start")
+            ->assertStatus(400)
+            ->assertJson(['error' => 'Simulated start error']);
+    }
+
+    public function test_resolve_occurrence_handles_exceptions()
+    {
+        $this->mock(RequestCommandUseCase::class, function ($mock) {
+            $mock->shouldReceive('execute')->andThrow(new \Exception('Simulated resolve error'));
+        });
+
+        $this->withHeaders([
+            'X-API-Key' => 'bombeiros-api-key-2026',
+            'Idempotency-Key' => Str::uuid()->toString()
+        ])->postJson("/api/occurrences/any-id/resolve")
+            ->assertStatus(400)
+            ->assertJson(['error' => 'Simulated resolve error']);
     }
 }

@@ -2,24 +2,27 @@
 
 namespace Application\UseCases;
 
+use Domain\Repositories\AuditLogRepositoryInterface;
 use Domain\Repositories\OccurrenceRepositoryInterface;
-use Application\Models\AuditLog;
 use Domain\Enums\OccurrenceStatus;
 use Domain\Entities\Occurrence;
 use Domain\Factories\OccurrenceFactory;
+use Domain\Services\MessageBrokerInterface;
 use Exception;
 
 class StartOccurrenceUseCase
 {
     public function __construct(
         private readonly OccurrenceRepositoryInterface $repository,
-        private readonly OccurrenceFactory $factory
+        private readonly OccurrenceFactory $factory,
+        private readonly MessageBrokerInterface $broker,
+        private readonly AuditLogRepositoryInterface $auditLogRepository
     ) {
     }
 
     public function execute(string $id, string $source = 'Sistema'): Occurrence
     {
-        $occurrence = $this->repository->findById($id);
+        $occurrence = $this->repository->findByIdForUpdate($id);
 
         if (!$occurrence) {
             throw new Exception("Occurrence not found");
@@ -42,13 +45,23 @@ class StartOccurrenceUseCase
 
         $this->repository->save($updatedOccurrence);
 
-        AuditLog::create([
-            'entity_type' => 'Occurrence',
-            'entity_id' => $occurrence->id,
-            'action' => 'started',
-            'source' => $source,
-            'before' => (array) $occurrence,
-            'after' => (array) $updatedOccurrence,
+        $this->auditLogRepository->log(
+            'Occurrence',
+            $occurrence->id,
+            'started',
+            $source,
+            (array) $occurrence,
+            (array) $updatedOccurrence
+        );
+
+        $this->broker->publish('events', 'occurrence.started', [
+            'event' => 'occurrence_started',
+            'data' => [
+                'id' => $updatedOccurrence->id,
+                'external_id' => $updatedOccurrence->externalId,
+                'status' => $updatedOccurrence->status->value,
+                'updated_at' => $updatedOccurrence->updatedAt->format('Y-m-d H:i:s'),
+            ]
         ]);
 
         return $updatedOccurrence;
