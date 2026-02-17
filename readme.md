@@ -29,6 +29,7 @@ O projeto inclui um `Makefile` para automatizar todo o processo. Certifique-se d
    ```
    *Isso executará o setup tanto da API quanto do Sistema Terceiro.*
 
+
 3. **Rodar Testes com Coverage**:
    ```bash
    make test-all
@@ -55,7 +56,24 @@ O projeto inclui um `Makefile` para automatizar todo o processo. Certifique-se d
    docker exec -it bombeiros-sistema-terceiro composer run setup
    ```
 
-4. Acessar os Sistemas:
+4. Rodar testes de Coverage:
+
+
+   Caso queira rodar o comando PHPUnit diretamente dentro do container para ver a cobertura:
+
+   **API Desafio:**
+   ```bash
+   docker exec -it bombeiros-api-desafio php artisan test --coverage-text
+   ```
+
+   **Sistema Terceiro:**
+   ```bash
+   docker exec -it bombeiros-sistema-terceiro php artisan test --coverage-text
+   ```
+
+
+5. Acessar os Sistemas:
+
 
    - **Sistema Terceiro (Gerador)**: http://localhost:8000
      *Utilize este painel para simular o envio de novas ocorrências.*
