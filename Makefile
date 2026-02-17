@@ -36,11 +36,11 @@ setup:
 
 test-api:
 	@echo "🧪 Running API Desafio Tests..."
-	docker exec -it bombeiros-api-desafio composer test
+	docker exec -it -e XDEBUG_MODE=coverage bombeiros-api-desafio vendor/bin/phpunit --coverage-text
 
 test-terceiro:
 	@echo "🧪 Running Sistema Terceiro Tests..."
-	docker exec -it bombeiros-sistema-terceiro composer test
+	docker exec -it -e XDEBUG_MODE=coverage bombeiros-sistema-terceiro vendor/bin/phpunit --coverage-text
 
 test-all: test-api test-terceiro
 
