@@ -93,6 +93,24 @@ services:
     restart: unless-stopped
     command: php artisan rabbitmq:consume-occurrences
 
+  api-desafio-simulator:
+    build:
+      context: ./api-desafio
+      dockerfile: docker/Dockerfile
+    container_name: bombeiros-simulator
+    volumes:
+      - ./api-desafio:/app
+    environment:
+      <<: *common-env
+    working_dir: /app
+    networks:
+      - bombeiros-network
+    depends_on:
+      - postgres
+      - rabbitmq
+    restart: unless-stopped
+    command: php artisan simulate:movement
+
   postgres:
     image: postgres:15-alpine
     container_name: bombeiros-postgres

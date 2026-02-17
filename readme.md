@@ -4,7 +4,7 @@ Este projeto é uma solução para o gerenciamento de ocorrências, implementand
 
 ---
 
-## Como rodar backend e frontend
+## Como rodar o projeto.
 
 O projeto utiliza Docker para orquestrar todos os serviços (PHP 8.2, PostgreSQL, RabbitMQ, Nginx). O repositório contém dois sistemas distintos que se comunicam via mensageria.
 
@@ -12,19 +12,32 @@ O projeto utiliza Docker para orquestrar todos os serviços (PHP 8.2, PostgreSQL
 - Docker
 - Docker Compose
 
-Para facilitar, temos scripts de automação que fazem todo o processo (Docker + Instalação + Migrations):
+---
 
-**Para rodar (Dois cliques):**
-Execute o arquivo `setup.bat` na raiz do projeto.
+### Para executar o projeto (Recomendado via Makefile)
 
-**Para rodar os testes (Seguro):**
-Execute o arquivo `test.bat`.
+O projeto inclui um `Makefile` para automatizar todo o processo. Se você tiver `make` instalado (Linux/Mac/WSL), basta rodar:
+
+1. **Subir os containers**:
+   ```bash
+   make up
+   ```
+
+2. **Configurar tudo (Instalação + Migrations + Build)**:
+   ```bash
+   make setup
+   ```
+   *Isso executará o setup tanto da API quanto do Sistema Terceiro.*
+
+
+3. **Rodar Testes com Coverage**:
+   ```bash
+   make test-all
+   ```
 
 ---
 
-### Execução Manual
-
-Caso prefira rodar manualmente:
+### Execução Manual (Caso prefira)
 
 1. Construir e subir os containers:
    ```bash
@@ -52,6 +65,13 @@ Caso prefira rodar manualmente:
      *Dashboard principal para visualizar e gerenciar as ocorrências recebidas.*
 
    - **RabbitMQ Admin**: http://localhost:15672 (User: admin, Pass: admin)
+
+   - **Banco de Dados (PostgreSQL)**:
+     - Host: `localhost`
+     - Port: `5432`
+     - Database: `bombeiros`
+     - User: `admin`
+     - Pass: `admin`
 
 ---
 
@@ -119,7 +139,6 @@ Devido ao escopo e tempo do desafio:
 
 1. Autenticação/Autorização Avançada (OAuth2/JWT).
 2. Dead Letter Queues (DLQ), poderia implementar no Retry.
-3. Instrumentação com métricas (Prometheus) e Tracing (OpenTelemetry).
 4. Pipeline de CI/CD completa.
 
 ---
