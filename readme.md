@@ -58,7 +58,6 @@ O projeto inclui um `Makefile` para automatizar todo o processo. Certifique-se d
 
 4. Rodar testes de Coverage:
 
-
    Caso queira rodar o comando PHPUnit diretamente dentro do container para ver a cobertura:
 
    **API Desafio:**
@@ -71,24 +70,22 @@ O projeto inclui um `Makefile` para automatizar todo o processo. Certifique-se d
    docker exec -it bombeiros-sistema-terceiro php artisan test --coverage-text
    ```
 
-
 5. Acessar os Sistemas:
 
+    - **Sistema Terceiro (Gerador)**: http://localhost:8000
+      *Utilize este painel para simular o envio de novas ocorrências.*
 
-   - **Sistema Terceiro (Gerador)**: http://localhost:8000
-     *Utilize este painel para simular o envio de novas ocorrências.*
+    - **API Desafio (Gestão)**: http://localhost:8001
+      *Dashboard principal para visualizar e gerenciar as ocorrências recebidas.*
 
-   - **API Desafio (Gestão)**: http://localhost:8001
-     *Dashboard principal para visualizar e gerenciar as ocorrências recebidas.*
+    - **RabbitMQ Admin**: http://localhost:15672 (User: admin, Pass: admin)
 
-   - **RabbitMQ Admin**: http://localhost:15672 (User: admin, Pass: admin)
-
-   - **Banco de Dados (PostgreSQL)**:
-     - Host: `localhost`
-     - Port: `5432`
-     - Database: `bombeiros`
-     - User: `admin`
-     - Pass: `admin`
+    - **Banco de Dados (PostgreSQL)**:
+        - Host: `localhost`
+        - Port: `5432`
+        - Database: `bombeiros`
+        - User: `admin`
+        - Pass: `admin`
 
 ---
 
@@ -105,14 +102,14 @@ O sistema segue os princípios de Clean Architecture e DDD, isolando as regras d
 <img src="docs/diagrama.png" alt="Desenho de Arquitetura" width="2326">
 
 ---
-    
+
 ## Estratégia de integração externa
 
 A integração entre o **Sistema Terceiro** e a **API Desafio** é feita via **HTTP** com processamento assíncrono via **RabbitMQ**.
 
 1. Recebimento de Eventos: O Sistema Terceiro envia uma requisição `POST` para a API Desafio.
 2. Enfileiramento: A API valida a requisição e publica o evento na fila `occurrences` do RabbitMQ.
-3. Processamento Assíncrono: Um Worker consome a fila e executa a regra de negócio (Criar, Iniciar, etc).
+3. Processamento Assíncrono: Um Worker consome a fila e executa a regra de negócio (Criar, Iniciar ou Resolver ocorrência), publicando eventos de confirmação (`occurrence.created`, `occurrence.started`, `occurrence.resolved`) para rastreabilidade.
 
 ---
 
@@ -123,8 +120,8 @@ Para garantir que a mesma mensagem não gere efeitos colaterais duplicados:
 1. Idempotency Key: Todo evento recebido possui uma chave única gerada na origem.
 2. Event Inbox: Antes de processar, salvamos o evento na tabela `event_inboxes`. O banco de dados garante unicidade na chave.
 3. Verificação de Estado: Se uma mensagem com a mesma chave chegar novamente:
-   - Se já foi processada: O sistema ignora e confirma o recebimento (ack).
-   - Se está pendente: O sistema aguarda ou descarta.
+    - Se já foi processada: O sistema ignora e confirma o recebimento (ack).
+    - Se está pendente: O sistema aguarda ou descarta.
 
 ---
 
@@ -132,7 +129,7 @@ Para garantir que a mesma mensagem não gere efeitos colaterais duplicados:
 
 Para lidar com múltiplos workers processando mensagens simultaneamente:
 
-1. Pessimistic Locking: Utilizamos `SELECT ... FOR UPDATE` ao buscar o evento no banco dentro de uma transação.
+1. Pessimistic Locking: Utilizamos `SELECT ... FOR UPDATE` via `findByIdForUpdate` ao buscar a **Occurrence** antes de alterar seu status, garantindo que dois workers não processem a mesma ocorrência simultaneamente.
 2. Atomicidade: O processamento do evento e a atualização do status ocorrem na mesma transação.
 3. Race Conditions: O design impede que dois workers peguem o mesmo registro ao mesmo tempo.
 
@@ -144,8 +141,8 @@ O sistema foi desenhado para ser resiliente a falhas:
 
 1. Tratamento de Exceções: Todo o processamento é protegido por blocos de tratamento de erro.
 2. Mecanismo de Retry:
-   - Falhas temporárias: A mensagem é devolvida à fila (nack) com incremento de tentativas.
-   - Limite: Após 3 tentativas falhas, o evento é marcado como falha e removido da fila para evitar loops infinitos.
+    - Falhas temporárias: A mensagem é devolvida à fila (nack) com incremento de tentativas.
+    - Limite: Após 3 tentativas falhas, o evento é marcado como falha e removido da fila para evitar loops infinitos.
 3. Log de Auditoria: Sucesso e falhas são registrados para rastreabilidade e reprocessamento.
 
 ---
@@ -156,7 +153,7 @@ Devido ao escopo e tempo do desafio:
 
 1. Autenticação/Autorização Avançada (OAuth2/JWT).
 2. Dead Letter Queues (DLQ), poderia implementar no Retry.
-4. Pipeline de CI/CD completa.
+3. Pipeline de CI/CD completa.
 
 ---
 
