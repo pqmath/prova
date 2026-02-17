@@ -1,0 +1,55 @@
+flowchart LR
+    %% ESTILOS
+    classDef external fill:#333,stroke:#666,stroke-width:2px,color:#fff;
+    classDef http fill:#f5f5f5,stroke:#333,stroke-width:2px;
+    classDef app fill:#fff,stroke:#333,stroke-width:2px;
+    classDef domain fill:#fff,stroke:#333,stroke-width:2px;
+    classDef infra fill:#fff,stroke:#333,stroke-width:2px;
+    classDef db fill:#fff,stroke:#333,stroke-width:3px;
+    
+    %% SISTEMA EXTERNO
+    EXT["Sistema Terceiro"]:::external
+    
+    %% API DE OCORRÊNCIAS
+    subgraph API["API de Ocorrências"]
+        direction TB
+        
+        subgraph HTTP["HTTP Layer"]
+            CTRL["Controller"]:::http
+        end
+        
+        subgraph APP_LAYER["Application Layer"]
+            direction TB
+            INBOX["Event Inbox - Idempotência"]:::app
+            USE_CASES["Application Service / Use Cases"]:::app
+        end
+        
+        subgraph DOMAIN["Domain"]
+            direction LR
+            RULES["Regras de Negócio"]:::domain
+            ENTITIES["Aggregates / Entities"]:::domain
+        end
+        
+        subgraph INFRA["Infrastructure"]
+            direction TB
+            QUEUE["Queue / Jobs"]:::infra
+            RETRY["Retry Handler - 3 tentativas"]:::infra
+            AUDIT["Audit Log"]:::infra
+        end
+        
+        DB[("PostgreSQL")]:::db
+    end
+    
+    %% FLUXOS
+    EXT -->|"HTTP Request"| CTRL
+    CTRL --> INBOX
+    INBOX -->|"Envia novo"| USE_CASES
+    INBOX -->|"Verifica evento existente"| INFRA
+    USE_CASES -->|"Auditoria"| AUDIT
+    USE_CASES --> RULES
+    RULES --> ENTITIES
+    QUEUE --> RETRY
+    RETRY -->|"Sucesso"| DB
+    RETRY -->|"Falha após 3x"| DB
+    USE_CASES -->|"Dispatch Job"| QUEUE
+    ENTITIES -->|"Persistência"| DB

@@ -17,6 +17,9 @@ Para facilitar, temos scripts de automação que fazem todo o processo (Docker +
 **Para rodar (Dois cliques):**
 Execute o arquivo `setup.bat` na raiz do projeto.
 
+**Para rodar os testes (Seguro):**
+Execute o arquivo `test.bat`.
+
 ---
 
 ### Execução Manual
@@ -60,7 +63,9 @@ O sistema segue os princípios de Clean Architecture e DDD, isolando as regras d
 - Application: Contém os Casos de Uso (Use Cases) e DTOs. Orquestra o fluxo de dados.
 - Infrastructure: Implementa os Adapters (Repositórios, RabbitMQ, Controllers, CLI).
 
-<img src="docs/diagrama.png" alt="Desenho de Arquitetura" width="800">
+**[📊 Ver diagrama Mermaid](docs/diagrama.mmd)**
+
+<img src="docs/diagrama.png" alt="Desenho de Arquitetura" width="2326">
 
 ---
 

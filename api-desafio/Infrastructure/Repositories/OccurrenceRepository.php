@@ -6,6 +6,7 @@ use Application\Models\Occurrence as EloquentOccurrence;
 use Domain\Entities\Occurrence;
 use Domain\Repositories\OccurrenceRepositoryInterface;
 use Domain\Factories\OccurrenceFactory;
+use Illuminate\Support\Facades\DB;
 
 class OccurrenceRepository implements OccurrenceRepositoryInterface
 {
@@ -83,7 +84,8 @@ class OccurrenceRepository implements OccurrenceRepositoryInterface
         }
 
         if (isset($filters['search'])) {
-            $query->where('description', 'ilike', '%' . $filters['search'] . '%');
+            $operator = DB::connection()->getDriverName() === 'pgsql' ? 'ilike' : 'like';
+            $query->where('description', $operator, '%' . $filters['search'] . '%');
         }
 
         return $query->orderBy('reported_at', 'desc')->paginate(15)->toArray();
